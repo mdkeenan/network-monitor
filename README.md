@@ -41,7 +41,7 @@ Open the built-in dashboard at `http://127.0.0.1:8080/` to review latency histor
 ### Application
 - **System tray** — background operation with no console window
 - **Single instance** — prevents duplicate copies fighting for the same port
-- **Portable** — `NetworkMonitor.exe` + `config.yaml` + `data\` folder
+- **Portable** — single `NetworkMonitor.exe`; creates `config.yaml` and `data\` on first run
 - **Local-only** — dashboard binds to `127.0.0.1`; data never leaves your machine unless you export it
 - **Retention** — automatic purge of records older than configured days (default 365)
 - **Text log** — human-readable append-only log alongside SQLite
@@ -73,19 +73,21 @@ The web UI is embedded in the binary (`//go:embed`). The dashboard talks to a lo
 
 ### Run
 1. Download or build `NetworkMonitor.exe`
-2. Place it alongside `config.yaml` (included in the repo)
-3. Double-click `NetworkMonitor.exe` — it appears in the system tray
-4. Open **http://127.0.0.1:8080/** in your browser
+2. Double-click `NetworkMonitor.exe` — it appears in the system tray
+3. Open **http://127.0.0.1:8080/** in your browser
+
+On first run the app creates `config.yaml`, a `data\` folder, the SQLite database, and log files next to the executable. No installer and no separate config file to ship.
 
 Right-click the tray icon to exit.
 
 ### Portable layout
+After first run:
 ```
 NetworkMonitor/
 ├── NetworkMonitor.exe
-├── config.yaml
-└── data/
-    ├── network_monitor.db
+├── config.yaml              (created on first launch)
+└── data/                    (created on first launch)
+    ├── network.db
     ├── NetworkMonitor.log
     └── NetworkMonitor-app.log
 ```

@@ -38,6 +38,8 @@ func (c Config) TextLogPath(baseDir string) string {
 	return filepath.Join(baseDir, c.TextLogFile)
 }
 
+const defaultUpdateManifestURL = "https://raw.githubusercontent.com/mdkeenan/network-monitor/main/update-manifest.json"
+
 func Defaults() Config {
 	return Config{
 		Target:                  "8.8.8.8",
@@ -48,6 +50,7 @@ func Defaults() Config {
 		VerifyDelaySec:          5,
 		WebPort:                 8080,
 		DataDir:                 "data",
+		TextLogFile:             "data/NetworkMonitor.log",
 		RetentionDays:           365,
 		SpeedtestDownloadURL:    "https://speed.cloudflare.com/__down",
 		SpeedtestDownloadBytes:  10_000_000,
@@ -55,19 +58,32 @@ func Defaults() Config {
 		SpeedtestUploadBytes:    5_000_000,
 		SpeedtestIntervalMin:    60,
 		AutoCheckUpdates:        true,
+		UpdateManifestURL:       defaultUpdateManifestURL,
 	}
 }
 
 func Load(baseDir string) (Config, error) {
-	cfg := Defaults()
 	path := filepath.Join(baseDir, "config.yaml")
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return cfg, err
+		if !os.IsNotExist(err) {
+			return Config{}, err
+		}
+		cfg := normalizeConfig(Defaults())
+		if saveErr := Save(baseDir, cfg); saveErr != nil {
+			return Config{}, saveErr
+		}
+		return cfg, nil
 	}
+
+	cfg := Defaults()
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return cfg, err
+		return Config{}, err
 	}
+	return normalizeConfig(cfg), nil
+}
+
+func normalizeConfig(cfg Config) Config {
 	if cfg.PingIntervalSec < 1 {
 		cfg.PingIntervalSec = 1
 	}
@@ -101,7 +117,7 @@ func Load(baseDir string) (Config, error) {
 	if cfg.SpeedtestUploadBytes < 1_000_000 {
 		cfg.SpeedtestUploadBytes = 5_000_000
 	}
-	return cfg, nil
+	return cfg
 }
 
 func Save(baseDir string, cfg Config) error {

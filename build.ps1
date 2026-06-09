@@ -16,7 +16,7 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "Done. Run .\update-and-run.ps1 -Background to rebuild, restart, and launch." -ForegroundColor Green
     Write-Host "The app runs in the system tray (no console window). Right-click the tray icon to exit." -ForegroundColor Green
     Write-Host "Dashboard: http://127.0.0.1:8080/" -ForegroundColor Green
-    Write-Host "Portable folder: NetworkMonitor.exe + config.yaml + data\" -ForegroundColor Green
+    Write-Host "Portable: NetworkMonitor.exe only (creates config.yaml and data\ on first run)" -ForegroundColor Green
 } else {
     exit $LASTEXITCODE
 }
