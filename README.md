@@ -134,9 +134,9 @@ Settings live in `config.yaml` next to the executable. Key options:
 | `retention_days` | `365` | Auto-purge age for stored records |
 | `speedtest_interval_min` | `60` | Minutes between scheduled speed tests |
 | `auto_check_updates` | `true` | Check for updates on startup |
-| `update_manifest_url` | *(empty)* | URL of JSON update manifest |
+| `update_manifest_url` | See `config.yaml` | URL of JSON update manifest ([`update-manifest.json`](update-manifest.json)) |
 
-Most settings can also be changed from **Settings** in the dashboard UI.
+Most settings can also be changed from **Settings** in the dashboard UI. The manifest URL is configured in `config.yaml` only.
 
 ---
 
@@ -183,6 +183,7 @@ go test ./...
 ├── main.go                 Entry point, tray, HTTP server
 ├── config.yaml             Default configuration
 ├── build.ps1               Production build script
+├── update-manifest.json    Update manifest for in-app version checks
 ├── internal/
 │   ├── monitor/            Ping, traceroute, speed test loops
 │   ├── database/           SQLite schema and queries
@@ -194,6 +195,67 @@ go test ./...
 │   └── tray/                 System tray icon
 └── docs/images/            README screenshots and diagrams
 ```
+
+---
+
+## Releasing
+
+Network Monitor checks for updates by fetching [`update-manifest.json`](update-manifest.json) from GitHub. The app compares the manifest `version` to the version baked into `NetworkMonitor.exe` at build time.
+
+### Manifest format
+
+```json
+{
+  "version": "v1.0.0",
+  "download_url": "https://github.com/mdkeenan/network-monitor/releases/download/v1.0.0/NetworkMonitor.exe",
+  "notes": "Optional message shown in Settings when an update is available."
+}
+```
+
+The manifest is served from:
+
+`https://raw.githubusercontent.com/mdkeenan/network-monitor/main/update-manifest.json`
+
+Users point `update_manifest_url` in `config.yaml` at that URL (included in the repo template).
+
+### Ship a new version
+
+1. **Bump the build version** in `build.ps1`:
+   ```powershell
+   # Change: -X main.version=v1.0.0
+   # To:     -X main.version=v1.0.1
+   ```
+2. **Build** the executable:
+   ```powershell
+   .\build.ps1
+   ```
+3. **Create a GitHub Release** tagged `v1.0.1` and upload `NetworkMonitor.exe` as a release asset.
+4. **Update `update-manifest.json`** on `main` with the new version and download URL:
+   ```json
+   {
+     "version": "v1.0.1",
+     "download_url": "https://github.com/mdkeenan/network-monitor/releases/download/v1.0.1/NetworkMonitor.exe",
+     "notes": "Describe what changed."
+   }
+   ```
+5. **Commit and push** the manifest change.
+
+Installations with `auto_check_updates: true` will see the update on next startup or when the user clicks **Check for updates** in Settings. The app does not auto-install — it reports the `download_url` in the status message.
+
+### Verify update checking
+
+1. Ensure `config.yaml` includes `update_manifest_url` (see repo template).
+2. Open the dashboard → **Settings**.
+3. Click **Check for updates**.
+
+| Result | Meaning |
+|--------|---------|
+| “You are running the latest version” | Manifest version matches your build |
+| “Update available: …” | A newer version is published in the manifest |
+| “No update source is configured” | `update_manifest_url` is empty |
+| HTTP or parse error | Manifest not pushed yet, repo is private, or JSON is invalid |
+
+> **Note:** Builds without ldflags report version `dev` (treated as older than any `v1.x.x` release). Use `.\build.ps1` when testing update checks.
 
 ---
 

@@ -13,3 +13,5 @@ speedtest_download_bytes: 10000000
 speedtest_upload_url: https://speed.cloudflare.com/__up
 speedtest_upload_bytes: 5000000
 speedtest_interval_min: 60
+auto_check_updates: true
+update_manifest_url: https://raw.githubusercontent.com/mdkeenan/network-monitor/main/update-manifest.json

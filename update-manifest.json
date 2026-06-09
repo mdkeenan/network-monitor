@@ -1,0 +1,5 @@
+{
+  "version": "v1.0.0",
+  "download_url": "https://github.com/mdkeenan/network-monitor/releases/download/v1.0.0/NetworkMonitor.exe",
+  "notes": "Download the new exe and replace your existing copy. Your config.yaml and data folder are preserved."
+}
