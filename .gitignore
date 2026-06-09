@@ -1,0 +1,4 @@
+/network-monitor.exe
+*.db
+*.db-shm
+*.db-wal
