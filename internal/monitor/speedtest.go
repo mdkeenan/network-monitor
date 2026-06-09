@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"network-monitor/internal/report"
 )
 
 const (
@@ -102,14 +104,14 @@ func (m *Monitor) scheduleSpeedTest() {
 	m.speedtestRunning = true
 	m.speedtestMu.Unlock()
 
-	go func() {
+	report.Go(func() {
 		defer func() {
 			m.speedtestMu.Lock()
 			m.speedtestRunning = false
 			m.speedtestMu.Unlock()
 		}()
 		m.runScheduledSpeedTest()
-	}()
+	})
 }
 
 func (m *Monitor) MeasureUpload(ctx context.Context) (mbps float64, bytesSent int64, durationSec float64, serverURL string, err error) {

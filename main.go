@@ -16,6 +16,7 @@ import (
 	"network-monitor/internal/database"
 	"network-monitor/internal/monitor"
 	"network-monitor/internal/paths"
+	"network-monitor/internal/report"
 	"network-monitor/internal/server"
 	"network-monitor/internal/singleinstance"
 	"network-monitor/internal/textlog"
@@ -30,9 +31,20 @@ var (
 )
 
 func main() {
+	exitCode := run()
+	os.Exit(exitCode)
+}
+
+func run() (exitCode int) {
+	defer func() {
+		if report.Recover() {
+			exitCode = 1
+		}
+	}()
+
 	if !singleinstance.TryAcquire() {
 		singleinstance.ShowAlreadyRunning()
-		os.Exit(0)
+		return 0
 	}
 	defer singleinstance.Release()
 
@@ -40,16 +52,16 @@ func main() {
 	cfg, err := config.Load(baseDir)
 	if err != nil {
 		winutil.ShowError("Network Monitor", fmt.Sprintf("Could not load config from %s:\n\n%v", filepath.Join(baseDir, "config.yaml"), err))
-		os.Exit(1)
+		return 1
 	}
 
 	dataDir := filepath.Join(baseDir, cfg.DataDir)
 	if err := applog.Setup(dataDir); err != nil {
 		winutil.ShowError("Network Monitor", err.Error())
-		os.Exit(1)
+		return 1
 	}
 
-	if err := autostart.EnsureEnabled(); err != nil {
+	if err := autostart.SetEnabled(cfg.RunAtStartup); err != nil {
 		log.Printf("autostart: %v", err)
 	}
 
@@ -76,12 +88,14 @@ func main() {
 	defer cancel()
 
 	mon := monitor.New(cfg, db, textLog)
-	go mon.Run(ctx)
+	report.Go(func() { mon.Run(ctx) })
 
 	srv, err := server.New(baseDir, version, buildDate, cfg, db, mon, textLog)
 	if err != nil {
 		log.Fatalf("server: %v", err)
 	}
+	report.ConfigureCrashReporting(cfg.AutoSendCrashReports, cfg.BugReportURL, version, srv.InstanceID())
+
 	addr := fmt.Sprintf("127.0.0.1:%d", cfg.WebPort)
 	dashboardURL := fmt.Sprintf("http://%s/", addr)
 	httpServer := &http.Server{
@@ -91,7 +105,7 @@ func main() {
 	}
 
 	if cfg.AutoCheckUpdates {
-		go func() {
+		report.Go(func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 			defer cancel()
 			result, err := updates.Check(ctx, cfg.UpdateManifestURL, version, srv.InstanceID())
@@ -102,10 +116,10 @@ func main() {
 			if result.UpdateAvailable {
 				log.Printf("update available: %s (current %s)", result.LatestVersion, result.CurrentVersion)
 			}
-		}()
+		})
 	}
 
-	go func() {
+	report.Go(func() {
 		log.Printf("Dashboard: %s", dashboardURL)
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			msg := fmt.Sprintf("Port %d is already in use. Stop the other Network Monitor copy (system tray → Exit) or change web_port in config.yaml.", cfg.WebPort)
@@ -113,7 +127,7 @@ func main() {
 			winutil.ShowError("Network Monitor", msg)
 			os.Exit(1)
 		}
-	}()
+	})
 
 	var shutdownOnce sync.Once
 	shutdown := func() {
@@ -138,5 +152,5 @@ func main() {
 		OnQuit:       shutdown,
 	})
 
-	os.Exit(0)
+	return 0
 }

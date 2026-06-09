@@ -15,10 +15,12 @@ import (
 	"strconv"
 	"time"
 
+	"network-monitor/internal/autostart"
 	"network-monitor/internal/config"
 	"network-monitor/internal/database"
 	"network-monitor/internal/instanceid"
 	"network-monitor/internal/monitor"
+	"network-monitor/internal/report"
 	"network-monitor/internal/textlog"
 	"network-monitor/internal/updates"
 )
@@ -90,6 +92,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/app/reset", s.handleAppReset)
 	mux.HandleFunc("/api/settings", s.handleSettings)
 	mux.HandleFunc("/api/updates/check", s.handleUpdatesCheck)
+	mux.HandleFunc("/api/report", s.handleBugReport)
 	mux.HandleFunc("/api/settings/test-target", s.handleTestTarget)
 	mux.HandleFunc("/api/settings/pick-folder", s.handlePickFolder)
 	mux.HandleFunc("/api/speedtest/result", s.handleSpeedTestResult)
@@ -108,7 +111,7 @@ func (s *Server) Handler() http.Handler {
 	}
 	mux.Handle("/", http.FileServer(http.FS(webRoot)))
 
-	return mux
+	return report.RecoverHTTPHandler(mux)
 }
 
 func (s *Server) handleVersion(w http.ResponseWriter, r *http.Request) {
@@ -298,8 +301,10 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 			WebPort           int    `json:"web_port"`
 			DataDir           string `json:"data_dir"`
 			RetentionDays     int    `json:"retention_days"`
-			AutoCheckUpdates  bool   `json:"auto_check_updates"`
-			ForceDeleteData   bool   `json:"force_delete_data"`
+			AutoCheckUpdates     bool   `json:"auto_check_updates"`
+			RunAtStartup         bool   `json:"run_at_startup"`
+			AutoSendCrashReports bool   `json:"auto_send_crash_reports"`
+			ForceDeleteData      bool   `json:"force_delete_data"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 			writeError(w, http.StatusBadRequest, fmt.Errorf("invalid request body"))
@@ -326,14 +331,21 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 		prevDataDir := s.cfg.DataDir
 
 		cfg, err := config.UpdateSettings(s.baseDir, config.SettingsUpdate{
-			Target:           body.Target,
-			WebPort:          body.WebPort,
-			DataDir:          body.DataDir,
-			RetentionDays:    body.RetentionDays,
-			AutoCheckUpdates: body.AutoCheckUpdates,
+			Target:               body.Target,
+			WebPort:              body.WebPort,
+			DataDir:              body.DataDir,
+			RetentionDays:        body.RetentionDays,
+			AutoCheckUpdates:     body.AutoCheckUpdates,
+			RunAtStartup:         body.RunAtStartup,
+			AutoSendCrashReports: body.AutoSendCrashReports,
 		}, s.cfg.WebPort)
 		if err != nil {
 			writeError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if err := autostart.SetEnabled(cfg.RunAtStartup); err != nil {
+			writeError(w, http.StatusInternalServerError, fmt.Errorf("windows startup: %w", err))
 			return
 		}
 
@@ -346,6 +358,7 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 
 		s.cfg = cfg
 		s.monitor.SetTarget(cfg.Target)
+		report.ConfigureCrashReporting(cfg.AutoSendCrashReports, cfg.BugReportURL, s.version, s.instanceID)
 
 		if _, err := s.db.PurgeOlderThan(cfg.RetentionDays); err != nil {
 			log.Printf("retention purge after settings save: %v", err)
@@ -367,8 +380,10 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 			"web_port":           cfg.WebPort,
 			"data_dir":           cfg.DataDir,
 			"retention_days":     cfg.RetentionDays,
-			"auto_check_updates": cfg.AutoCheckUpdates,
-			"restart_required":   restartRequired,
+			"auto_check_updates":      cfg.AutoCheckUpdates,
+			"run_at_startup":          cfg.RunAtStartup,
+			"auto_send_crash_reports": cfg.AutoSendCrashReports,
+			"restart_required":        restartRequired,
 			"redirect_url":       redirectURL,
 		})
 	default:
@@ -415,6 +430,8 @@ func (s *Server) buildSettingsGETResponse() (map[string]any, error) {
 		"data_dir":                   s.cfg.DataDir,
 		"retention_days":             s.cfg.RetentionDays,
 		"auto_check_updates":         s.cfg.AutoCheckUpdates,
+		"run_at_startup":             s.cfg.RunAtStartup,
+		"auto_send_crash_reports":    s.cfg.AutoSendCrashReports,
 		"trace_interval_sec":         traceSec,
 		"healthy_trace_interval_sec": healthyTraceSec,
 		"data_coverage_days":         coverageDays,
@@ -435,6 +452,32 @@ func (s *Server) handleUpdatesCheck(w http.ResponseWriter, r *http.Request) {
 	result, err := updates.Check(ctx, s.cfg.UpdateManifestURL, s.version, s.instanceID)
 	if err != nil {
 		writeError(w, http.StatusBadGateway, fmt.Errorf("check for updates: %w", err))
+		return
+	}
+	writeJSON(w, result)
+}
+
+func (s *Server) handleBugReport(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, fmt.Errorf("method not allowed"))
+		return
+	}
+
+	var body struct {
+		Description string `json:"description"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeError(w, http.StatusBadRequest, fmt.Errorf("invalid request body"))
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 25*time.Second)
+	defer cancel()
+
+	appLogPath := filepath.Join(s.baseDir, s.cfg.DataDir, "NetworkMonitor-app.log")
+	result, err := report.Submit(ctx, s.cfg.BugReportURL, s.version, s.instanceID, body.Description, appLogPath)
+	if err != nil {
+		writeError(w, http.StatusBadGateway, fmt.Errorf("send bug report: %w", err))
 		return
 	}
 	writeJSON(w, result)
@@ -471,6 +514,7 @@ func (s *Server) handleAppReset(w http.ResponseWriter, r *http.Request) {
 
 	s.cfg = cfg
 	s.monitor.SetTarget(cfg.Target)
+	report.ConfigureCrashReporting(cfg.AutoSendCrashReports, cfg.BugReportURL, s.version, s.instanceID)
 
 	if _, err := s.db.PurgeOlderThan(cfg.RetentionDays); err != nil {
 		log.Printf("retention purge after app reset: %v", err)

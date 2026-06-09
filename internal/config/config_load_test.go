@@ -39,6 +39,22 @@ func TestLoadCreatesConfigWhenMissing(t *testing.T) {
 	}
 }
 
+func TestLoadDefaultsRunAtStartupWhenKeyMissing(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.yaml")
+	if err := os.WriteFile(path, []byte("target: 1.1.1.1\n"), 0o644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	cfg, err := Load(dir)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if !cfg.RunAtStartup {
+		t.Fatal("RunAtStartup should default to true for legacy configs")
+	}
+}
+
 func TestLoadExistingConfig(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.yaml")

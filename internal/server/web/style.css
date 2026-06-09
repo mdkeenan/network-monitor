@@ -2261,10 +2261,48 @@ h2 {
   color: var(--danger-text);
 }
 
+.app-settings-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
 .app-settings-updates {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+}
+
+.app-settings-report {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.app-settings-textarea {
+  width: 100%;
+  min-height: 4.5rem;
+  resize: vertical;
+  box-sizing: border-box;
+  padding: 0.55rem 0.65rem;
+  border: var(--border-width) solid var(--card-border);
+  border-radius: 6px;
+  background: var(--surface-dark);
+  color: var(--text);
+  font: inherit;
+  line-height: 1.45;
+}
+
+.app-settings-textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.app-settings-report-note {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.45;
 }
 
 .app-settings-checkbox {

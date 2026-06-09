@@ -324,9 +324,14 @@ const resetAppCancelBtn = document.getElementById("reset-app-cancel-btn");
 const settingsForm = document.getElementById("settings-form");
 const settingsIpEchoBtn = document.getElementById("settings-ip-echo-btn");
 const settingsAboutBtn = document.getElementById("settings-about-btn");
+const settingsRunAtStartupInput = document.getElementById("settings-run-at-startup-input");
 const settingsAutoCheckUpdatesInput = document.getElementById("settings-auto-check-updates-input");
+const settingsAutoSendCrashReportsInput = document.getElementById("settings-auto-send-crash-reports-input");
 const settingsCheckUpdatesBtn = document.getElementById("settings-check-updates-btn");
 const settingsUpdatesStatusEl = document.getElementById("settings-updates-status");
+const settingsBugReportDescriptionEl = document.getElementById("settings-bug-report-description");
+const settingsSendBugReportBtn = document.getElementById("settings-send-bug-report-btn");
+const settingsBugReportStatusEl = document.getElementById("settings-bug-report-status");
 const aboutDialog = document.getElementById("about-dialog");
 const aboutVersionEl = document.getElementById("about-version");
 const aboutSegInstanceEl = document.getElementById("about-seg-instance");
@@ -402,6 +407,8 @@ const SETTINGS_FACTORY_DEFAULTS = {
   data_dir: "data",
   retention_days: "365",
   auto_check_updates: true,
+  run_at_startup: true,
+  auto_send_crash_reports: false,
 };
 
 const createDefaultSettingsDraft = () => ({ ...SETTINGS_FACTORY_DEFAULTS });
@@ -431,6 +438,8 @@ const settingsDraftFromApi = (data) => ({
   data_dir: data.data_dir || "data",
   retention_days: String(data.retention_days ?? 365),
   auto_check_updates: data.auto_check_updates !== false,
+  run_at_startup: data.run_at_startup !== false,
+  auto_send_crash_reports: data.auto_send_crash_reports === true,
 });
 
 const restoreSettingsFormDefaults = () => {
@@ -446,8 +455,14 @@ const restoreSettingsFormDefaults = () => {
   if (settingsRetentionDaysInput) {
     settingsRetentionDaysInput.value = SETTINGS_FACTORY_DEFAULTS.retention_days;
   }
+  if (settingsRunAtStartupInput) {
+    settingsRunAtStartupInput.checked = SETTINGS_FACTORY_DEFAULTS.run_at_startup;
+  }
   if (settingsAutoCheckUpdatesInput) {
     settingsAutoCheckUpdatesInput.checked = SETTINGS_FACTORY_DEFAULTS.auto_check_updates;
+  }
+  if (settingsAutoSendCrashReportsInput) {
+    settingsAutoSendCrashReportsInput.checked = SETTINGS_FACTORY_DEFAULTS.auto_send_crash_reports;
   }
   if (settingsTargetPresetSelect) {
     settingsTargetPresetSelect.value = "";
@@ -1685,6 +1700,8 @@ const collectSettingsForm = () => {
       data_dir: dataDirResult.value,
       retention_days: Number(retentionResult.value),
       auto_check_updates: settingsAutoCheckUpdatesInput?.checked !== false,
+      run_at_startup: settingsRunAtStartupInput?.checked !== false,
+      auto_send_crash_reports: settingsAutoSendCrashReportsInput?.checked === true,
     },
   };
 };
@@ -1702,8 +1719,14 @@ const applySettingsDraftToInputs = () => {
   if (settingsRetentionDaysInput) {
     settingsRetentionDaysInput.value = settingsDraft.retention_days;
   }
+  if (settingsRunAtStartupInput) {
+    settingsRunAtStartupInput.checked = settingsDraft.run_at_startup !== false;
+  }
   if (settingsAutoCheckUpdatesInput) {
     settingsAutoCheckUpdatesInput.checked = settingsDraft.auto_check_updates !== false;
+  }
+  if (settingsAutoSendCrashReportsInput) {
+    settingsAutoSendCrashReportsInput.checked = settingsDraft.auto_send_crash_reports === true;
   }
   syncTargetPresetSelect();
   setTargetInputValidity("");
@@ -1802,6 +1825,51 @@ const showSettingsUpdatesStatus = (message, { isError = false } = {}) => {
   settingsUpdatesStatusEl.classList.toggle("app-settings-updates-status-error", isError);
 };
 
+const showSettingsBugReportStatus = (message, { isError = false } = {}) => {
+  if (!settingsBugReportStatusEl) {
+    return;
+  }
+  if (!message) {
+    settingsBugReportStatusEl.hidden = true;
+    settingsBugReportStatusEl.textContent = "";
+    settingsBugReportStatusEl.classList.remove("app-settings-updates-status-error");
+    return;
+  }
+  settingsBugReportStatusEl.hidden = false;
+  settingsBugReportStatusEl.textContent = message;
+  settingsBugReportStatusEl.classList.toggle("app-settings-updates-status-error", isError);
+};
+
+const formatBugReportMessage = (result) => {
+  if (result?.issue_url) {
+    return `${result.message || "Bug report sent."} ${result.issue_url}`;
+  }
+  return result?.message || "Bug report sent.";
+};
+
+const runBugReportSend = async () => {
+  if (settingsSendBugReportBtn) {
+    settingsSendBugReportBtn.disabled = true;
+  }
+  showSettingsBugReportStatus("Sending bug report…");
+  try {
+    const description = settingsBugReportDescriptionEl?.value?.trim() || "";
+    const result = await postJSON("/api/report", { description });
+    showSettingsBugReportStatus(formatBugReportMessage(result));
+    if (result?.ok && settingsBugReportDescriptionEl) {
+      settingsBugReportDescriptionEl.value = "";
+    }
+    return result;
+  } catch (err) {
+    showSettingsBugReportStatus(err.message || "Could not send bug report.", { isError: true });
+    throw err;
+  } finally {
+    if (settingsSendBugReportBtn) {
+      settingsSendBugReportBtn.disabled = false;
+    }
+  }
+};
+
 const formatUpdateCheckMessage = (result) => {
   if (result?.update_available) {
     let message = `Update available: ${result.latest_version} (you have ${result.current_version}).`;
@@ -1891,6 +1959,7 @@ const openSettingsDialog = async () => {
   } else {
     showSettingsUpdatesStatus("");
   }
+  showSettingsBugReportStatus("");
   if (!settingsDialog) {
     return;
   }
@@ -2189,6 +2258,8 @@ const saveSettings = async (payload) => {
       data_dir: payload.data_dir,
       retention_days: payload.retention_days,
       auto_check_updates: payload.auto_check_updates !== false,
+      run_at_startup: payload.run_at_startup !== false,
+      auto_send_crash_reports: payload.auto_send_crash_reports === true,
       force_delete_data: Boolean(payload.forceDeleteData),
     });
 
@@ -2198,6 +2269,8 @@ const saveSettings = async (payload) => {
       data_dir: body.data_dir || payload.data_dir,
       retention_days: String(body.retention_days ?? payload.retention_days),
       auto_check_updates: body.auto_check_updates !== false,
+      run_at_startup: body.run_at_startup !== false,
+      auto_send_crash_reports: body.auto_send_crash_reports === true,
     };
     settingsDataCoverageDays = 0;
     pendingSettingsPayload = null;
@@ -4761,6 +4834,12 @@ if (settingsAboutBtn) {
 if (settingsCheckUpdatesBtn) {
   settingsCheckUpdatesBtn.addEventListener("click", () => {
     runUpdateCheck().catch(() => {});
+  });
+}
+
+if (settingsSendBugReportBtn) {
+  settingsSendBugReportBtn.addEventListener("click", () => {
+    runBugReportSend().catch(() => {});
   });
 }
 

@@ -2,6 +2,6 @@
 
 package autostart
 
-func ensureEnabledPlatform() error {
+func setEnabledPlatform(enabled bool) error {
 	return nil
 }

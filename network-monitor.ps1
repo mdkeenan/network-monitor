@@ -1,6 +1,6 @@
 # --- CONFIGURATION ---
 $TargetHost        = "8.8.8.8"
-$LogFile           = "C:\NetworkMonitor_Log.txt" # Change this path if needed
+$LogFile           = "CC:\Users\micha\OneDrive\Documents\Network Monitoring\NetworkMonitor_Log.txt" # Change this path if needed
 $PingDelay         = 1   # Seconds between normal pings
 $TraceRouteInterval= 30  # Seconds between traceroutes during a failure period
 $RequiredSuccesses = 5   # Consecutive successful pings required to recover

@@ -12,11 +12,13 @@ import (
 const MinRetentionDays = 1
 
 type SettingsUpdate struct {
-	Target            string
-	WebPort           int
-	DataDir           string
-	RetentionDays     int
-	AutoCheckUpdates  bool
+	Target           string
+	WebPort          int
+	DataDir          string
+	RetentionDays    int
+	AutoCheckUpdates     bool
+	RunAtStartup         bool
+	AutoSendCrashReports bool
 }
 
 func ValidateWebPortInput(input string, currentPort int) (int, error) {
@@ -156,6 +158,8 @@ func UpdateSettings(baseDir string, update SettingsUpdate, currentPort int) (Con
 	cfg.DataDir = dataDir
 	cfg.RetentionDays = retentionDays
 	cfg.AutoCheckUpdates = update.AutoCheckUpdates
+	cfg.RunAtStartup = update.RunAtStartup
+	cfg.AutoSendCrashReports = update.AutoSendCrashReports
 
 	if err := Save(baseDir, cfg); err != nil {
 		return Config{}, err

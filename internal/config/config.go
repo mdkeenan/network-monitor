@@ -27,6 +27,8 @@ type Config struct {
 	SpeedtestIntervalMin    int    `yaml:"speedtest_interval_min"`
 	AutoCheckUpdates        bool   `yaml:"auto_check_updates"`
 	UpdateManifestURL       string `yaml:"update_manifest_url"`
+	BugReportURL            string `yaml:"bug_report_url"`
+	AutoSendCrashReports    bool   `yaml:"auto_send_crash_reports"`
 	RunAtStartup            bool   `yaml:"run_at_startup"`
 }
 
@@ -40,7 +42,10 @@ func (c Config) TextLogPath(baseDir string) string {
 	return filepath.Join(baseDir, c.TextLogFile)
 }
 
-const defaultUpdateManifestURL = "https://raw.githubusercontent.com/mdkeenan/network-monitor/main/update-manifest.json"
+const (
+	defaultUpdateManifestURL = "https://raw.githubusercontent.com/mdkeenan/network-monitor/main/update-manifest.json"
+	defaultBugReportURL      = "https://reports.swift-raven.org/network-monitor/bug"
+)
 
 func Defaults() Config {
 	return Config{
@@ -61,6 +66,8 @@ func Defaults() Config {
 		SpeedtestIntervalMin:    60,
 		AutoCheckUpdates:        true,
 		UpdateManifestURL:       defaultUpdateManifestURL,
+		BugReportURL:            defaultBugReportURL,
+		AutoSendCrashReports:    false,
 		RunAtStartup:            true,
 	}
 }
@@ -85,6 +92,9 @@ func Load(baseDir string) (Config, error) {
 	}
 	if !strings.Contains(string(data), "run_at_startup") {
 		cfg.RunAtStartup = true
+	}
+	if !strings.Contains(string(data), "bug_report_url") {
+		cfg.BugReportURL = defaultBugReportURL
 	}
 	return normalizeConfig(cfg), nil
 }

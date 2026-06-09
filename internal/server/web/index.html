@@ -324,14 +324,41 @@
       </label>
       <p id="settings-testing" class="app-settings-testing" hidden>Testing target reachability (3 pings)…</p>
       <p id="settings-error" class="app-settings-error" hidden></p>
-      <div class="app-settings-updates">
+      <div class="app-settings-options">
+        <label class="app-settings-checkbox" for="settings-run-at-startup-input">
+          <input type="checkbox" id="settings-run-at-startup-input" checked>
+          <span>Run at Windows startup</span>
+        </label>
         <label class="app-settings-checkbox" for="settings-auto-check-updates-input">
           <input type="checkbox" id="settings-auto-check-updates-input" checked>
           <span>Automatically check for updates</span>
         </label>
+        <label class="app-settings-checkbox" for="settings-auto-send-crash-reports-input">
+          <input type="checkbox" id="settings-auto-send-crash-reports-input">
+          <span>Send crash reports automatically</span>
+        </label>
+      </div>
+      <div class="app-settings-updates">
         <div class="app-settings-updates-actions">
           <button type="button" id="settings-check-updates-btn" class="app-settings-secondary">Check for updates</button>
           <p id="settings-updates-status" class="app-settings-updates-status" hidden></p>
+        </div>
+      </div>
+      <div class="app-settings-report">
+        <label class="app-settings-field" for="settings-bug-report-description">
+          <span class="field-label-row">Describe the problem (optional)</span>
+          <textarea
+            id="settings-bug-report-description"
+            class="app-settings-textarea"
+            rows="3"
+            maxlength="4000"
+            placeholder="What happened? What did you expect?"
+          ></textarea>
+        </label>
+        <p class="app-settings-report-note">Sends version, instance ID, OS, and a tail of the application log automatically. No monitoring database or full config is included.</p>
+        <div class="app-settings-updates-actions">
+          <button type="button" id="settings-send-bug-report-btn" class="app-settings-secondary">Send bug report</button>
+          <p id="settings-bug-report-status" class="app-settings-updates-status" hidden></p>
         </div>
       </div>
       <div class="app-settings-secondary-entries">

@@ -15,7 +15,14 @@ const (
 	valueName  = "NetworkMonitor"
 )
 
-func ensureEnabledPlatform() error {
+func setEnabledPlatform(enabled bool) error {
+	if enabled {
+		return enableAutostart()
+	}
+	return disableAutostart()
+}
+
+func enableAutostart() error {
 	exe, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("resolve executable path: %w", err)
@@ -39,6 +46,22 @@ func ensureEnabledPlatform() error {
 
 	if err := key.SetStringValue(valueName, command); err != nil {
 		return fmt.Errorf("set Run registry value: %w", err)
+	}
+	return nil
+}
+
+func disableAutostart() error {
+	key, err := registry.OpenKey(registry.CURRENT_USER, runKeyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("open Run registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.DeleteValue(valueName); err != nil {
+		if err == registry.ErrNotExist {
+			return nil
+		}
+		return fmt.Errorf("remove Run registry value: %w", err)
 	}
 	return nil
 }

@@ -11,6 +11,7 @@ import (
 	"network-monitor/internal/config"
 	"network-monitor/internal/database"
 	"network-monitor/internal/publicip"
+	"network-monitor/internal/report"
 	"network-monitor/internal/textlog"
 )
 
@@ -100,8 +101,10 @@ func (m *Monitor) Intervals() (traceSec, healthyTraceSec int) {
 }
 
 func (m *Monitor) Run(ctx context.Context) {
+	defer report.Recover()
+
 	log.Printf("Monitoring %s (ping every %ds)", m.Target(), m.cfg.PingIntervalSec)
-	go m.runSpeedTestScheduler(ctx)
+	report.Go(func() { m.runSpeedTestScheduler(ctx) })
 	if m.textLog != nil {
 		if err := m.textLog.SessionStart(
 			m.Target(),
@@ -120,11 +123,11 @@ func (m *Monitor) Run(ctx context.Context) {
 	ticker := time.NewTicker(time.Duration(m.cfg.PingIntervalSec) * time.Second)
 	defer ticker.Stop()
 
-	go func() {
+	report.Go(func() {
 		startCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
 		defer cancel()
 		m.publicIP.RunStartupCheck(startCtx)
-	}()
+	})
 
 	for {
 		m.tick(ctx, &lastOutageTraceroute, &lastHealthyTraceroute)
@@ -304,14 +307,14 @@ func (m *Monitor) scheduleTraceroute(ctx context.Context, last *time.Time, kind 
 	m.traceRunning = true
 	m.traceMu.Unlock()
 
-	go func() {
+	report.Go(func() {
 		defer func() {
 			m.traceMu.Lock()
 			m.traceRunning = false
 			m.traceMu.Unlock()
 		}()
 		m.runTraceroute(ctx, last, kind)
-	}()
+	})
 }
 
 func (m *Monitor) runTraceroute(ctx context.Context, last *time.Time, kind string) {

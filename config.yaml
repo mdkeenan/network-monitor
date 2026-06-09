@@ -15,3 +15,6 @@ speedtest_upload_bytes: 5000000
 speedtest_interval_min: 60
 auto_check_updates: true
 update_manifest_url: https://raw.githubusercontent.com/mdkeenan/network-monitor/main/update-manifest.json
+bug_report_url: https://reports.swift-raven.org/network-monitor/bug
+auto_send_crash_reports: false
+run_at_startup: true
