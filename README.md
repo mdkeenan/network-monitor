@@ -46,7 +46,7 @@ Open the built-in dashboard at `http://127.0.0.1:8080/` to review latency histor
 - **Retention** — automatic purge of records older than configured days (default 365)
 - **Text log** — human-readable append-only log alongside SQLite
 - **Update checks** — optional manifest-based update checking with instance ID header
-- **Windows autostart** — optional startup registration
+- **Windows autostart** — optional “Run at Windows startup” in Settings
 
 ---
 
@@ -136,6 +136,7 @@ Settings live in `config.yaml` next to the executable. Key options:
 | `retention_days` | `365` | Auto-purge age for stored records |
 | `speedtest_interval_min` | `60` | Minutes between scheduled speed tests |
 | `auto_check_updates` | `true` | Check for updates on startup |
+| `run_at_startup` | `true` | Register app in Windows login startup |
 | `update_manifest_url` | See `config.yaml` | URL of JSON update manifest ([`update-manifest.json`](update-manifest.json)) |
 
 Most settings can also be changed from **Settings** in the dashboard UI. The manifest URL is configured in `config.yaml` only.

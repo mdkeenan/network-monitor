@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -26,6 +27,7 @@ type Config struct {
 	SpeedtestIntervalMin    int    `yaml:"speedtest_interval_min"`
 	AutoCheckUpdates        bool   `yaml:"auto_check_updates"`
 	UpdateManifestURL       string `yaml:"update_manifest_url"`
+	RunAtStartup            bool   `yaml:"run_at_startup"`
 }
 
 func (c Config) TextLogPath(baseDir string) string {
@@ -59,6 +61,7 @@ func Defaults() Config {
 		SpeedtestIntervalMin:    60,
 		AutoCheckUpdates:        true,
 		UpdateManifestURL:       defaultUpdateManifestURL,
+		RunAtStartup:            true,
 	}
 }
 
@@ -79,6 +82,9 @@ func Load(baseDir string) (Config, error) {
 	cfg := Defaults()
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return Config{}, err
+	}
+	if !strings.Contains(string(data), "run_at_startup") {
+		cfg.RunAtStartup = true
 	}
 	return normalizeConfig(cfg), nil
 }
