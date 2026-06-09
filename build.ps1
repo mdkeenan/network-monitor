@@ -10,7 +10,7 @@ go mod tidy
 Write-Host "Building NetworkMonitor.exe (background app, no console window)..." -ForegroundColor Cyan
 $buildDate = Get-Date -Format 'yyyyMMdd'
 $env:CGO_ENABLED = "0"
-go build -ldflags "-s -w -H windowsgui -X main.version=v1.0.0 -X main.buildDate=$buildDate" -o NetworkMonitor.exe .
+go build -ldflags "-s -w -H windowsgui -X main.version=v1.0.1 -X main.buildDate=$buildDate" -o NetworkMonitor.exe .
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "Done. Run .\update-and-run.ps1 -Background to rebuild, restart, and launch." -ForegroundColor Green
