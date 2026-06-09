@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Network Monitor</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="header-row">
+      <div>
+        <h1>Network Monitor</h1>
+        <p id="subtitle-private-ip" class="header-subtitle-line">Source Private IP: <span class="subtitle-ip-copy-wrap"><button type="button" id="subtitle-private-ip-btn" class="header-action-btn subtitle-target-btn" aria-label="Copy private IP address to clipboard">Loading...</button><span id="subtitle-private-ip-copied" class="header-info-popup subtitle-ip-copied-popup" role="status">Copied</span></span> <span class="subtitle-ip-copy-wrap"><button type="button" id="subtitle-private-prefix-btn" class="header-action-btn subtitle-target-btn" aria-label="Copy subnet mask to clipboard">/—</button><span id="subtitle-private-prefix-copied" class="header-info-popup subtitle-ip-copied-popup" role="status">Copied</span></span> Default Gateway: <span class="subtitle-ip-copy-wrap"><button type="button" id="subtitle-private-gateway-btn" class="header-action-btn subtitle-target-btn" aria-label="Copy default gateway to clipboard">Loading...</button><span id="subtitle-private-gateway-copied" class="header-info-popup subtitle-ip-copied-popup" role="status">Copied</span></span></p>
+        <p id="subtitle-public-ip" class="header-subtitle-line">Source Public IP: <span class="subtitle-ip-copy-wrap"><button type="button" id="subtitle-public-ip-btn" class="header-action-btn subtitle-target-btn" aria-label="Copy public IP address to clipboard">Loading...</button><span id="subtitle-public-ip-copied" class="header-info-popup subtitle-ip-copied-popup" role="status">Copied</span></span><span id="subtitle-public-ip-isp" class="subtitle-ip-info"></span></p>
+        <p id="subtitle" class="header-subtitle-line">
+          <span id="subtitle-loading">Loading...</span>
+          <span id="subtitle-ready" hidden>Target Host: <button type="button" id="subtitle-target-btn" class="header-action-btn subtitle-target-btn subtitle-target-healthy" aria-label="Change monitoring target in Settings"></button><span id="subtitle-target-info" class="subtitle-ip-info"></span><span id="subtitle-meta"></span></span>
+          <span id="subtitle-error" hidden></span>
+        </p>
+      </div>
+      <div class="header-actions">
+        <div id="header-normal-actions" class="header-buttons">
+          <div class="header-action-column header-action-column-left">
+            <div class="header-action-wrap log-download-wrap" id="log-download-wrap">
+              <button type="button" id="download-data-btn" class="header-action-btn">Download data</button>
+              <div id="log-meta" class="header-info-popup log-meta-popup" role="tooltip"></div>
+            </div>
+            <div class="header-action-wrap customize-dashboard-wrap">
+              <button id="customize-dashboard-btn" type="button" class="header-action-btn">Customize dashboard</button>
+              <div id="customize-dashboard-info" class="header-info-popup customize-info-popup" role="tooltip">
+                Choose which widgets appear on your dashboard. Your choices are saved in this browser.
+              </div>
+            </div>
+          </div>
+          <div class="header-action-column header-delete-settings-column">
+            <button id="delete-data-btn" type="button" class="header-action-btn delete-data-btn">Delete stored data</button>
+            <div class="header-action-wrap settings-btn-wrap">
+              <button id="settings-btn" type="button" class="header-action-btn">Settings</button>
+              <div id="settings-btn-info" class="header-info-popup settings-info-popup" role="tooltip">
+                Change the monitoring target, web port, data folder, and retention. Saved to config.yaml.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="grid-edit-header-actions" class="header-buttons grid-edit-header-actions" hidden>
+          <div class="header-action-column">
+            <button id="grid-edit-apply-btn" type="button" class="header-action-btn grid-edit-apply-btn">Apply changes</button>
+          </div>
+          <div class="header-action-column header-delete-settings-column">
+            <button id="grid-edit-cancel-btn" type="button" class="header-action-btn grid-edit-cancel-btn">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="dashboard" class="dashboard dashboard-grid">
+    <section class="widget" id="widget-summary-cards" data-widget-id="summary-cards">
+      <h3 class="chart-panel-title widget-panel-title">Summary Cards</h3>
+      <div class="cards cards-grid" id="summary-cards-grid">
+        <div class="card" data-summary-card-id="status">
+          <span class="label field-label-row" data-info-tip="Current reachability of the monitoring target from the latest ping.">Status</span>
+          <span id="status-pill" class="pill">—</span>
+        </div>
+        <div class="card" data-summary-card-id="last-rtt">
+          <span class="label field-label-row" data-info-tip="Round-trip time from the most recent successful ping to the target.">Last RTT</span>
+          <strong id="last-rtt">—</strong>
+        </div>
+        <div class="card" data-summary-card-id="availability">
+          <span class="label field-label-row" data-info-tip="Percentage of successful pings in the selected chart time range.">Availability</span>
+          <strong id="availability">—</strong>
+        </div>
+        <div class="card" data-summary-card-id="avg-rtt">
+          <span class="label field-label-row" data-info-tip="Average round-trip time for successful pings in the selected chart time range.">Avg RTT (Ping delay)</span>
+          <strong id="avg-rtt">—</strong>
+        </div>
+        <div class="card" data-summary-card-id="jitter-ms">
+          <span class="label field-label-row" data-info-tip="Mean variation between consecutive ping RTT values over the last 60 successful pings.">Jitter</span>
+          <strong id="jitter-ms">—</strong>
+        </div>
+        <div class="card" data-summary-card-id="last-outage">
+          <span class="label field-label-row" data-info-tip="Date and time of the latest outage traceroute; matches the outage traceroute widget. Shows None if no outage traces exist.">Last confirmed outage</span>
+          <strong id="last-outage">None</strong>
+        </div>
+        <div class="card" data-summary-card-id="speedtest-download">
+          <span class="label field-label-row" data-info-tip="Latest measured download speed from the most recent speed test (manual or scheduled), fetched from the configured CDN test file.">Download</span>
+          <strong id="speedtest-download-val" class="summary-speedtest-download">—</strong>
+        </div>
+        <div class="card" data-summary-card-id="speedtest-upload">
+          <span class="label field-label-row" data-info-tip="Latest upload speed from the most recent speed test (manual or scheduled), sent to the configured CDN upload endpoint.">Upload</span>
+          <strong id="speedtest-upload-val" class="summary-speedtest-upload">—</strong>
+        </div>
+        <div class="card" data-summary-card-id="speedtest-latency">
+          <span class="label field-label-row" data-info-tip="Round-trip time from the latest ping at the time of the most recent speed test.">Latency</span>
+          <strong id="speedtest-latency-val" class="summary-speedtest-latency">—</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="widget" id="widget-range-controls" data-widget-id="range-controls">
+      <h3 class="chart-panel-title widget-panel-title">Range Controls</h3>
+      <div class="controls">
+        <label>
+          Range
+          <select id="range-select">
+            <option value="5m">Last 5 minutes</option>
+            <option value="15m">Last 15 minutes</option>
+            <option value="30m">Last 30 minutes</option>
+            <option value="1h">Last 1 hour</option>
+            <option value="6h">Last 6 hours</option>
+            <option value="24h" selected>Last 24 hours</option>
+            <option value="168h">Last 7 days</option>
+            <option value="720h">Last 30 days</option>
+            <option value="1440h">Last 60 days</option>
+            <option value="2160h">Last 90 days</option>
+            <option value="8760h">Last 365 days</option>
+            <option value="custom">Custom range...</option>
+          </select>
+        </label>
+        <div class="range-playback-controls" role="group" aria-label="Chart range live or paused">
+          <button id="range-live-btn" type="button" class="range-playback-btn" title="Live — advance the range with current time" aria-pressed="false">Live</button>
+          <button id="range-pause-btn" type="button" class="range-playback-btn is-active" title="Pause — freeze the range" aria-pressed="true">Pause</button>
+        </div>
+        <div id="custom-range" class="custom-range" hidden>
+          <label>
+            From
+            <input id="range-from" type="datetime-local" step="60">
+          </label>
+          <label>
+            To
+            <input id="range-to" type="datetime-local" step="60">
+          </label>
+          <button id="apply-range-btn" type="button">Apply range</button>
+        </div>
+        <button id="reset-range-btn" type="button">Reset</button>
+        <p id="range-status" class="range-status" hidden></p>
+        <p id="range-error" class="range-error" hidden></p>
+      </div>
+    </section>
+
+    <section class="widget chart-wrap chart-wrap-line" id="widget-line-chart" data-widget-id="line-chart">
+      <h3 class="chart-panel-title widget-panel-title">Network Status Timeline</h3>
+      <div id="line-chart-legend" class="line-chart-legend" aria-label="Timeline legend"></div>
+      <div class="line-chart-area">
+        <canvas id="rtt-chart"></canvas>
+      </div>
+      <div id="chart-tooltip" class="chart-tooltip" hidden></div>
+    </section>
+
+    <section class="widget chart-wrap chart-wrap-pie" id="widget-pie-chart" data-widget-id="pie-chart">
+      <h3 class="chart-panel-title widget-panel-title">Up/Down Breakdown</h3>
+      <div class="uptime-chart-area">
+        <canvas id="uptime-chart"></canvas>
+      </div>
+      <div id="uptime-legend" class="uptime-legend"></div>
+      <div id="uptime-chart-tooltip" class="chart-tooltip" hidden></div>
+    </section>
+
+    <section class="widget chart-wrap chart-wrap-speedtest" id="widget-speedtest" data-widget-id="speedtest">
+      <h3 class="chart-panel-title widget-panel-title">Internet Speed Test</h3>
+      <div class="speedtest-body">
+        <div id="speedtest-data-usage" class="speedtest-data-usage"></div>
+        <div id="speedtest-server-label" class="speedtest-server-label"></div>
+        <div id="speedtest-chart-legend" class="line-chart-legend" aria-label="Speed test legend"></div>
+        <div class="speedtest-chart-area">
+          <canvas id="speedtest-chart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="widget chart-wrap chart-wrap-speedtest-gauge" id="widget-speedtest-gauge" data-widget-id="speedtest-gauge">
+      <h3 class="chart-panel-title widget-panel-title">Speed Test</h3>
+      <div class="speedtest-gauge-body">
+        <div class="speedtest-gauge-wrap" aria-live="polite">
+          <div class="speedtest-gauge-stage">
+            <svg class="speedtest-gauge-svg" viewBox="0 -10 260 158" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Speed test gauge">
+              <path class="speedtest-gauge-track" id="speedtest-gauge-track"></path>
+              <path class="speedtest-gauge-progress" id="speedtest-gauge-progress"></path>
+              <circle class="speedtest-gauge-knob" id="speedtest-gauge-knob" r="5.5"></circle>
+              <g id="speedtest-gauge-ticks"></g>
+            </svg>
+            <div class="speedtest-gauge-readout">
+              <div id="speedtest-gauge-value" class="speedtest-gauge-value">—</div>
+              <div class="speedtest-gauge-unit">Megabits per second</div>
+              <div id="speedtest-gauge-phase" class="speedtest-gauge-phase">
+                <span id="speedtest-gauge-phase-icon" class="speedtest-gauge-phase-icon" hidden aria-hidden="true">↑</span>
+                <span id="speedtest-gauge-phase-text">Ready to test</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="speedtest-gauge-results">
+          <div class="speedtest-gauge-result">
+            <div id="speedtest-gauge-download" class="speedtest-gauge-result-value">—</div>
+            <button type="button" id="speedtest-gauge-download-label" class="speedtest-gauge-result-label is-active">Mbps download</button>
+          </div>
+          <div class="speedtest-gauge-result-divider" aria-hidden="true"></div>
+          <div class="speedtest-gauge-result">
+            <div id="speedtest-gauge-upload" class="speedtest-gauge-result-value">—</div>
+            <button type="button" id="speedtest-gauge-upload-label" class="speedtest-gauge-result-label">Mbps upload</button>
+          </div>
+        </div>
+        <div class="speedtest-gauge-actions">
+          <span id="speedtest-status" class="speedtest-status"></span>
+          <div class="speedtest-gauge-action-buttons">
+            <button type="button" id="speedtest-cancel-btn" class="speedtest-cancel-btn" hidden>Cancel</button>
+            <button type="button" id="speedtest-run-btn" class="speedtest-run-btn">Run Speed Test</button>
+          </div>
+        </div>
+        <div id="speedtest-error" class="speedtest-error" hidden></div>
+      </div>
+    </section>
+
+    <section class="widget events" id="widget-event-list" data-widget-id="event-list">
+      <h3 class="chart-panel-title widget-panel-title">Event List</h3>
+      <ul id="event-list"></ul>
+    </section>
+
+    <section class="widget trace" id="widget-traceroute-healthy" data-widget-id="traceroute-healthy">
+      <h3 class="chart-panel-title widget-panel-title">Last Successful Traceroute</h3>
+      <p class="widget-hint" id="trace-healthy-meta">Routine path check while Status is UP</p>
+      <pre id="trace-healthy-output">No traceroute recorded yet.</pre>
+    </section>
+
+    <section class="widget trace" id="widget-traceroute-outage" data-widget-id="traceroute-outage">
+      <h3 class="chart-panel-title widget-panel-title">Latest Traceroute During an Outage</h3>
+      <p class="widget-hint" id="trace-outage-meta">Captured during confirmed outages</p>
+      <pre id="trace-output">No outage detected yet.</pre>
+    </section>
+  </main>
+
+  <dialog id="widget-settings" class="widget-settings">
+    <form method="dialog" class="widget-settings-form">
+      <div class="widget-settings-header">
+        <h2>Dashboard widgets</h2>
+        <p>Choose which widgets and summary card panels appear on your dashboard. Your choices are saved in this browser.</p>
+      </div>
+      <div id="widget-settings-list" class="widget-settings-list"></div>
+      <div class="widget-settings-grid-edit">
+        <button id="widget-grid-edit-btn" type="button" class="widget-settings-secondary widget-settings-grid-edit-btn">Show and edit grid</button>
+      </div>
+      <div class="widget-settings-actions">
+        <button id="widget-reset-btn" type="button" class="widget-settings-secondary">Restore defaults</button>
+        <div class="widget-settings-actions-right">
+          <button id="widget-cancel-btn" type="button" class="widget-settings-secondary">Cancel</button>
+          <button type="submit" value="close" class="widget-settings-primary">Apply</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="settings-dialog" class="app-settings-dialog">
+    <form method="dialog" class="app-settings-form" id="settings-form">
+      <div class="app-settings-header">
+        <h2>Settings</h2>
+        <p>Monitoring and storage settings. Saved to config.yaml.</p>
+      </div>
+      <label class="app-settings-field">
+        <span class="field-label-row" data-info-tip="IP address or hostname that is pinged every second to detect outages and measure delay.">Target (IP address or hostname)</span>
+        <input
+          id="settings-target-input"
+          type="text"
+          value="8.8.8.8"
+          autocomplete="off"
+          spellcheck="false"
+          maxlength="253"
+          required
+          inputmode="url"
+          aria-describedby="settings-error"
+          title="Valid IPv4 (8.8.8.8), IPv6, or hostname (google.com)"
+        >
+      </label>
+      <div class="app-settings-default-targets">
+        <div class="app-settings-default-target-item">
+          <button type="button" id="settings-default-target-btn" class="app-settings-secondary" aria-pressed="false">8.8.8.8</button>
+          <span class="app-settings-default-target-label">Default IP</span>
+        </div>
+        <button type="button" id="settings-alt-target-btn" class="app-settings-secondary" aria-pressed="false">8.8.1.1</button>
+      </div>
+      <label class="app-settings-field">
+        <span class="field-label-row" data-info-tip="Quick picks for public test IPs in major regions. Selecting one fills the target field above.">Regional target presets</span>
+        <select id="settings-target-preset" aria-label="Regional target presets">
+          <option value="">Choose a preset…</option>
+        </select>
+      </label>
+      <label class="app-settings-field">
+        <span class="field-label-row" data-info-tip="Local HTTP port for this dashboard. The app listens on 127.0.0.1 only; changing the port restarts the app.">Dashboard web port</span>
+        <input
+          id="settings-web-port-input"
+          type="text"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          maxlength="5"
+          autocomplete="off"
+          spellcheck="false"
+        >
+      </label>
+      <label class="app-settings-field">
+        <span class="field-label-row" data-info-tip="Folder where the SQLite database and optional text log are stored, relative to the app folder or as an absolute path.">Data directory</span>
+        <span class="app-settings-field-row">
+          <input
+            id="settings-data-dir-input"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <button type="button" id="settings-pick-folder-btn" class="app-settings-secondary">Select folder…</button>
+        </span>
+      </label>
+      <label class="app-settings-field">
+        <span class="field-label-row" data-info-tip="How many days of ping, event, and traceroute history to keep. Older rows are purged automatically.">Retention (days)</span>
+        <input
+          id="settings-retention-days-input"
+          type="text"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          maxlength="4"
+          autocomplete="off"
+          spellcheck="false"
+        >
+      </label>
+      <p id="settings-testing" class="app-settings-testing" hidden>Testing target reachability (3 pings)…</p>
+      <p id="settings-error" class="app-settings-error" hidden></p>
+      <div class="app-settings-updates">
+        <label class="app-settings-checkbox" for="settings-auto-check-updates-input">
+          <input type="checkbox" id="settings-auto-check-updates-input" checked>
+          <span>Automatically check for updates</span>
+        </label>
+        <div class="app-settings-updates-actions">
+          <button type="button" id="settings-check-updates-btn" class="app-settings-secondary">Check for updates</button>
+          <p id="settings-updates-status" class="app-settings-updates-status" hidden></p>
+        </div>
+      </div>
+      <div class="app-settings-secondary-entries">
+        <button type="button" id="settings-ip-echo-btn" class="app-settings-secondary">IP echo services</button>
+        <button type="button" id="settings-about-btn" class="app-settings-secondary">About</button>
+      </div>
+      <div class="app-settings-actions">
+        <div class="app-settings-actions-left">
+          <button type="button" id="settings-reset-app-btn" class="app-settings-danger">Reset app</button>
+          <button type="button" id="settings-restore-defaults-btn" class="app-settings-secondary">Restore defaults</button>
+        </div>
+        <div class="app-settings-actions-right">
+          <button type="button" id="settings-cancel-btn" class="app-settings-secondary">Cancel</button>
+          <button type="submit" id="settings-apply-btn" class="app-settings-primary">Apply</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="about-dialog" class="app-settings-dialog about-dialog">
+    <div class="app-settings-form about-form">
+      <div class="about-accent-bar" aria-hidden="true"></div>
+      <div class="about-top-section">
+        <div class="about-hero">
+          <div class="about-header">
+            <h2 class="about-title">About</h2>
+            <p id="about-version" class="about-version">Version: …</p>
+          </div>
+        </div>
+        <hr class="about-divider" aria-hidden="true">
+        <div class="about-body">
+          <p class="about-description">Network Monitor is a self-contained Windows application for tracking internet connectivity over time. It runs ping and traceroute probes on a configurable schedule, records results in a local SQLite database, and presents them through a browser-based dashboard — including latency history, route visualization, and speed tests. No installation, no cloud services, no external dependencies.</p>
+        </div>
+      </div>
+      <div class="about-lower-stack">
+        <hr class="about-divider" aria-hidden="true">
+        <footer class="about-footer">
+          <p class="about-author">Author:
+            <a
+              href="https://www.linkedin.com/in/michaeldkeenan/"
+              class="about-author-name"
+              target="_blank"
+              rel="noopener noreferrer"
+            >Michael Keenan</a>
+          </p>
+        </footer>
+        <div class="about-instance-zone">
+          <div class="about-instance-block">
+            <div class="about-instance-label">Instance ID</div>
+            <div class="about-instance-id-row">
+              <div class="about-instance-id-segments">
+                <div class="about-instance-col">
+                  <span class="about-instance-seg-value" id="about-seg-instance"></span>
+                  <span class="about-instance-seg-label">INSTANCE</span>
+                </div>
+                <span class="about-instance-sep">-</span>
+                <div class="about-instance-col">
+                  <span class="about-instance-seg-value" id="about-seg-version"></span>
+                  <span class="about-instance-seg-label">VERSION</span>
+                </div>
+                <span class="about-instance-sep">-</span>
+                <div class="about-instance-col">
+                  <span class="about-instance-seg-value" id="about-seg-build"></span>
+                  <span class="about-instance-seg-label">BUILD</span>
+                </div>
+                <span class="about-instance-sep">-</span>
+                <div class="about-instance-col">
+                  <span class="about-instance-seg-value" id="about-seg-integrity"></span>
+                  <span class="about-instance-seg-label">INTEGRITY</span>
+                </div>
+              </div>
+              <button class="about-instance-copy-btn" id="about-instance-copy-btn" title="Copy instance ID">Copy</button>
+            </div>
+          </div>
+        </div>
+        <hr class="about-divider about-divider-actions" aria-hidden="true">
+        <div class="app-settings-actions about-actions about-actions-centered">
+          <button type="button" id="about-close-btn" class="app-settings-secondary">Close</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="ip-echo-dialog" class="app-settings-dialog ip-echo-dialog">
+    <div class="app-settings-form ip-echo-form">
+      <div class="app-settings-header">
+        <h2>IP echo services</h2>
+        <p>Status of public IP detection providers. Click a provider to view DNS addresses.</p>
+      </div>
+      <p id="ip-echo-loading" class="ip-echo-loading" hidden>Checking providers…</p>
+      <p id="ip-echo-error" class="app-settings-error" hidden></p>
+      <div class="ip-echo-table-wrap">
+        <table class="ip-echo-grid">
+          <thead>
+            <tr class="ip-echo-header-row">
+              <th class="ip-echo-header-url">
+                <span data-info-tip="This is the IP Echo Service Provider URL that would tell you what your public IP address is">Echo Service URL</span>
+              </th>
+              <th class="ip-echo-header-service">
+                <span data-info-tip="This is the resolved IP address of the IP Echo Service Provider">Echo Service IP</span>
+              </th>
+              <th class="ip-echo-header-echoed">
+                <span data-info-tip="This is your public IP address as seen by this IP Echo Service Provider">Echoed IP</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="ip-echo-provider-list"></tbody>
+        </table>
+      </div>
+      <div class="app-settings-actions">
+        <div class="app-settings-actions-right">
+          <button type="button" id="ip-echo-close-btn" class="app-settings-secondary">Close</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="ip-echo-dns-dialog" class="app-settings-dialog ip-echo-dns-dialog">
+    <div class="app-settings-form ip-echo-dns-form">
+      <div class="app-settings-header">
+        <h2 id="ip-echo-dns-title">DNS lookup</h2>
+        <p id="ip-echo-dns-host"></p>
+      </div>
+      <ul id="ip-echo-dns-list" class="ip-echo-dns-list"></ul>
+      <p id="ip-echo-dns-empty" class="ip-echo-dns-empty" hidden>No DNS addresses resolved.</p>
+      <div class="app-settings-actions">
+        <div class="app-settings-actions-right">
+          <button type="button" id="ip-echo-dns-close-btn" class="app-settings-secondary">Close</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="settings-unreachable-dialog" class="app-settings-unreachable-dialog">
+    <div class="app-settings-unreachable-form">
+      <div class="app-settings-unreachable-header">
+        <h2>Target unreachable</h2>
+        <p>
+          Could not reach <strong id="settings-unreachable-target"></strong> after 3 test pings.
+          The target may be offline, blocking ICMP, or mistyped.
+        </p>
+      </div>
+      <div class="app-settings-unreachable-actions">
+        <button type="button" id="settings-unreachable-cancel-btn" class="app-settings-secondary">Never mind</button>
+        <button type="button" id="settings-unreachable-apply-btn" class="app-settings-primary">Apply anyway</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="settings-retention-year-dialog" class="app-settings-unreachable-dialog">
+    <div class="app-settings-unreachable-form">
+      <div class="app-settings-unreachable-header">
+        <h2>Retention longer than one year</h2>
+        <p>You entered <strong id="settings-retention-year-value"></strong> days of retention, which is more than one year.</p>
+      </div>
+      <div class="app-settings-unreachable-actions">
+        <button type="button" id="settings-retention-year-cancel-btn" class="app-settings-secondary">Never mind</button>
+        <button type="button" id="settings-retention-year-apply-btn" class="app-settings-primary">Apply</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="settings-retention-data-dialog" class="app-settings-unreachable-dialog">
+    <div class="app-settings-unreachable-form">
+      <div class="app-settings-unreachable-header">
+        <h2>Retention shorter than stored data</h2>
+        <p id="settings-retention-data-message"></p>
+      </div>
+      <div class="app-settings-unreachable-actions">
+        <button type="button" id="settings-retention-data-cancel-btn" class="app-settings-secondary">Never mind</button>
+        <button type="button" id="settings-retention-data-delete-btn" class="app-settings-primary">Delete all data</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="reset-app-dialog" class="delete-data-dialog">
+    <div class="delete-data-dialog-form">
+      <div class="delete-data-dialog-header">
+        <h2>Reset app?</h2>
+        <p>
+          This restores all settings to factory defaults, permanently deletes all stored
+          ping history, events, traceroutes, and the text log, then restarts the app.
+          This cannot be undone.
+        </p>
+      </div>
+      <div class="delete-data-dialog-actions">
+        <button type="button" id="reset-app-cancel-btn" class="delete-data-cancel">Never mind</button>
+        <button type="button" id="reset-app-confirm-btn" class="delete-data-confirm">Yes</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="delete-data-dialog" class="delete-data-dialog">
+    <div class="delete-data-dialog-form">
+      <div class="delete-data-dialog-header">
+        <h2>Delete stored data?</h2>
+        <p>
+          This permanently removes all ping history, events, and traceroutes from the database,
+          and clears the text log. This cannot be undone.
+        </p>
+      </div>
+      <div class="delete-data-dialog-actions">
+        <button type="button" id="delete-data-cancel-btn" class="delete-data-cancel">Never mind</button>
+        <button type="button" id="delete-data-confirm-btn" class="delete-data-confirm">Yes</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div id="download-panel-overlay" class="download-panel-overlay" hidden>
+    <div id="download-panel" class="download-panel" role="dialog" aria-labelledby="download-panel-title" aria-modal="true">
+      <div class="app-settings-form download-panel-form">
+        <div class="app-settings-header">
+          <h2 id="download-panel-title">Download Data</h2>
+          <p>Export monitoring data for a selected time range.</p>
+        </div>
+
+        <label class="app-settings-field">
+          <span>Range</span>
+          <select id="download-range-select">
+            <option value="5m">Last 5 minutes</option>
+            <option value="15m">Last 15 minutes</option>
+            <option value="30m">Last 30 minutes</option>
+            <option value="1h">Last 1 hour</option>
+            <option value="6h">Last 6 hours</option>
+            <option value="24h">Last 24 hours</option>
+            <option value="168h">Last 7 days</option>
+            <option value="720h">Last 30 days</option>
+            <option value="1440h">Last 60 days</option>
+            <option value="2160h">Last 90 days</option>
+            <option value="8760h">Last 365 days</option>
+            <option value="custom">Custom range...</option>
+          </select>
+        </label>
+
+        <div class="download-date-row">
+          <label class="app-settings-field download-date-field">
+            <span>From</span>
+            <input id="download-range-from" type="datetime-local" step="60">
+          </label>
+          <label class="app-settings-field download-date-field">
+            <span>To</span>
+            <input id="download-range-to" type="datetime-local" step="60">
+          </label>
+        </div>
+
+        <div class="app-settings-field">
+          <span>Format — select what to download as:</span>
+          <label class="download-option-row" for="download-format-log">
+            <input type="checkbox" id="download-format-log" value="log">
+            <span class="download-opt-label">Text log</span>
+            <span class="download-ext-badge">.log</span>
+          </label>
+          <label class="download-option-row" for="download-format-csv">
+            <input type="checkbox" id="download-format-csv" value="csv">
+            <span class="download-opt-label">Spreadsheet</span>
+            <span class="download-ext-badge">.csv</span>
+          </label>
+          <label class="download-option-row" for="download-format-md">
+            <input type="checkbox" id="download-format-md" value="md">
+            <span class="download-opt-label">Markdown</span>
+            <span class="download-ext-badge">.md</span>
+          </label>
+          <label class="download-option-row" for="download-format-html">
+            <input type="checkbox" id="download-format-html" value="html">
+            <span class="download-opt-label">Web page</span>
+            <span class="download-ext-badge">.html</span>
+            <span class="download-opt-hint">Self-contained offline replica</span>
+          </label>
+        </div>
+
+        <div class="app-settings-field">
+          <span>Data — select what to include:</span>
+          <div class="download-data-grid">
+            <label class="download-option-row" for="download-datatype-pings">
+              <input type="checkbox" id="download-datatype-pings" value="pings">
+              <span class="download-opt-label">Pings</span>
+            </label>
+            <label class="download-option-row" for="download-datatype-events">
+              <input type="checkbox" id="download-datatype-events" value="events">
+              <span class="download-opt-label">Events (outages, blips, IP changes)</span>
+            </label>
+            <label class="download-option-row" for="download-datatype-traceroutes">
+              <input type="checkbox" id="download-datatype-traceroutes" value="traceroutes">
+              <span class="download-opt-label">Traceroutes</span>
+            </label>
+            <label class="download-option-row" for="download-datatype-speedtests">
+              <input type="checkbox" id="download-datatype-speedtests" value="speedtests">
+              <span class="download-opt-label">Speed tests</span>
+            </label>
+          </div>
+          <label class="download-selectall-row" for="download-select-all">
+            <input type="checkbox" id="download-select-all">
+            <span class="download-selectall-label">Select all — ZIP diagnostic bundle</span>
+            <span class="download-selectall-sub">checks everything above</span>
+          </label>
+        </div>
+
+        <p id="download-zip-note" class="download-zip-note" hidden>ⓘ Multiple files will be packaged as a ZIP archive.</p>
+        <p id="download-error" class="app-settings-error" hidden></p>
+        <a id="download-raw-log-link" class="download-raw-link" href="/api/log/download" download="NetworkMonitor.log">Download raw activity log</a>
+
+        <div class="app-settings-actions">
+          <div class="app-settings-actions-right">
+            <button type="button" id="download-panel-cancel-btn" class="app-settings-secondary">Cancel</button>
+            <button type="button" id="download-panel-download-btn" class="app-settings-primary">Download</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/widgets.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
+

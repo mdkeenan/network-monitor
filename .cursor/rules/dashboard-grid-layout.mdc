@@ -1,0 +1,91 @@
+---
+description: Dashboard widget grid layout, panel inset, edit mode, and non-negotiable invariants
+globs:
+  - internal/server/web/widgets.js
+  - internal/server/web/style.css
+  - internal/server/web/app.js
+  - internal/server/web/index.html
+alwaysApply: true
+---
+
+# Dashboard grid layout
+
+Permanent rules for all dashboard layout and edit-mode work in `style.css`, `widgets.js`, `app.js`, and `index.html`. Do not deviate.
+
+## The grid
+
+- CSS grid on `.dashboard-grid` in `style.css` with `--grid-columns: 36`.
+- Each widget occupies `{ col, row, colSpan, rowSpan }` in grid units.
+- Layout persisted in `localStorage` key `networkMonitor.dashboard.layout` as `{ version: 23, widgets: { [id]: { col, row, colSpan, rowSpan } }, summaryCards: [] }`. Do not rename key or envelope.
+- Grid lines are cell boundaries. `--dashboard-grid-gap` is `0px` on `.dashboard-grid` — never change track gap.
+
+## The gap between panels
+
+- **`--widget-panel-inset: 8px`** in `:root` is the **only** visual gutter between panels.
+- Applied via `margin: var(--widget-panel-inset)` on `.dashboard-grid > .widget, .dashboard-grid > .chart-wrap` — never per-widget hardcoding.
+- JS reads inset via `getComputedStyle(document.documentElement)` / `getWidgetPanelInsetPx()` — never duplicate the value in JS.
+- Snapping targets grid lines only; inset is render-time margin, never in snap math.
+- Adjacent panels never visually touch (each panel inset from owned cell boundary).
+
+## Minimum size
+
+- `measureWidgetMinSpans()` derives min `colSpan`/`rowSpan` from DOM scroll sizes.
+- Content must fit **rendered** area: `renderedSpanPixels = allocatedSpan - 2 * inset` (`renderedSpanPixels()`, `minSpanForRenderedPixels()`).
+- Resize stops at minimum; overlap rejected via `placementsOverlap` / `findOverlappingWidget`.
+
+## Content scaling
+
+- Widget interiors size to rendered area (cell minus inset): flex, `min-height: 0`, Chart.js `maintainAspectRatio: false`.
+- Chart canvases fill containers — no hardcoded pixel dimensions on dashboard charts.
+- **Dashboard grid children** must use `height: auto` and `max-height: calc(100% - 2 * var(--widget-panel-inset))` on `.dashboard-grid > .widget` and `.chart-wrap` variants. **Never** `height: 100%` on those selectors — it overflows inset and panels touch.
+
+## Moving (edit mode only)
+
+- Drag by panel title/header (`.widget-panel-title`, `.chart-panel-title`) or `.widget-drag-handle`.
+- On release: snap to nearest grid cell origin via `pointerToGridPlacement`.
+- Overlap rejected — no swap, no reflow of other widgets.
+
+## Edit mode vs view mode
+
+- **View mode (default):** no move/resize; layout via `stackMeasureAndApplyDashboardLayout` + `DASHBOARD_LAYOUT_STACK` (two-pass measure/apply — do not break or bypass). Do **not** call stack measure during edit mode. Refit saves to localStorage when row spans change.
+- **Edit mode:** `#widget-grid-edit-btn` in the Customize dashboard dialog only (no header Edit layout button). Apply: `#grid-edit-apply-btn`. Cancel: `#grid-edit-cancel-btn`.
+
+### Entering edit mode
+
+- Grid overlay on `.dashboard-grid::before` behind panels.
+- Panels semi-transparent (`opacity: 0.82`); inset keeps grid lines visible at seams.
+- Eight resize handles: `n`, `s`, `e`, `w`, `ne`, `nw`, `se`, `sw`.
+- Headers draggable (`cursor: grab`).
+- Fire `dashboard:grid-edit-mode` with `{ detail: { active: true } }`.
+
+### While in edit mode
+
+- Mutations go to `gridEditLayoutDraft` only — **no localStorage** until Apply.
+- Snapshot in `gridEditLayoutSnapshot` at entry for Cancel restore.
+- Min spans enforced during drag/resize; overlap rejected in real time (resize preview skips invalid placements).
+- On Apply: `WidgetDashboard.saveLayout(gridEditLayoutDraft)`, exit, restore full opacity, remove handles.
+- On Cancel: discard draft, `applyDashboardPlacementsOnly(gridEditLayoutSnapshot)` — exact restore, no stack repack.
+
+### Exiting edit mode
+
+- Fire `dashboard:grid-edit-mode` with `{ detail: { active: false } }`.
+- Chart.js axis grids toggle **only** via this event (and `getDashboardChartGridOptions()` at chart creation).
+
+## Layout versioning
+
+- `LAYOUT_VERSION` is `23`. Increment on default layout or migration changes; add step in `migrateLayoutVersion`.
+
+## Chart.js grid visibility (`app.js`)
+
+- `applyDashboardChartGridVisibility` must be defined **before** `buildChart()` (TDZ).
+- **Do not** call it from inside `buildChart()` after `chart.update()` — causes `t.startsWith is not a function`.
+- Toggle only via `dashboard:grid-edit-mode` listener and `getDashboardChartGridOptions()` at creation.
+
+## Non-negotiable invariants
+
+- All widget content visible and contained at minimum size and above; no unexpected clip/overflow/scroll.
+- No two panels visually touch or overlap in any mode.
+- `--widget-panel-inset` defined once in `:root` only.
+- `app.js` and `widgets.js` stay monolithic — do not split into modules.
+- `window.WidgetDashboard` exported API is stable.
+- After web file changes: rebuild `NetworkMonitor.exe` and hard-refresh browser (Ctrl+F5) — assets are embedded; stale process serves old files.
