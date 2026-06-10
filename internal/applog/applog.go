@@ -14,7 +14,7 @@ func Setup(dataDir string) error {
 		return fmt.Errorf("create log directory: %w", err)
 	}
 
-	path := filepath.Join(dataDir, "NetworkMonitor-app.log")
+	path := filepath.Join(dataDir, "ConnectWatch-app.log")
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return fmt.Errorf("open app log: %w", err)

@@ -1,6 +1,6 @@
-# Network Monitor
+# ConnectWatch
 
-![Network Monitor banner](docs/images/readme-banner.png)
+![ConnectWatch banner](docs/images/readme-banner.png)
 
 **Self-contained Windows connectivity monitoring** — ping, traceroute, speed tests, and a local browser dashboard. No installer, no cloud account, no external database.
 
@@ -12,7 +12,7 @@
 
 ## Overview
 
-Network Monitor is a portable Windows application that runs quietly in the system tray and records internet health over time. It pings a configurable target every second, runs traceroutes on a schedule (and during confirmed outages), performs periodic speed tests, and stores everything locally in SQLite.
+ConnectWatch is a portable Windows application that runs quietly in the system tray and records internet health over time. It pings a configurable target every second, runs traceroutes on a schedule (and during confirmed outages), performs periodic speed tests, and stores everything locally in SQLite.
 
 Open the built-in dashboard at `http://127.0.0.1:8080/` to review latency history, availability, jitter, route changes, public IP shifts, and export your data.
 
@@ -41,7 +41,7 @@ Open the built-in dashboard at `http://127.0.0.1:8080/` to review latency histor
 ### Application
 - **System tray** — background operation with no console window
 - **Single instance** — prevents duplicate copies fighting for the same port
-- **Portable** — single `NetworkMonitor.exe`; creates `config.yaml` and `data\` on first run
+- **Portable** — single `ConnectWatch.exe`; creates `config.yaml` and `data\` on first run
 - **Local-only** — dashboard binds to `127.0.0.1`; data never leaves your machine unless you export it
 - **Retention** — automatic purge of records older than configured days (default 365)
 - **Text log** — human-readable append-only log alongside SQLite
@@ -72,8 +72,8 @@ The web UI is embedded in the binary (`//go:embed`). The dashboard talks to a lo
 - No separate runtime — the release build is a single `.exe`
 
 ### Run
-1. Download or build `NetworkMonitor.exe`
-2. Double-click `NetworkMonitor.exe` — it appears in the system tray
+1. Download or build `ConnectWatch.exe`
+2. Double-click `ConnectWatch.exe` — it appears in the system tray
 3. Open **http://127.0.0.1:8080/** in your browser
 
 On first run the app creates `config.yaml`, a `data\` folder, the SQLite database, and log files next to the executable. No installer and no separate config file to ship.
@@ -83,13 +83,13 @@ Right-click the tray icon to exit.
 ### Portable layout
 After first run:
 ```
-NetworkMonitor/
-├── NetworkMonitor.exe
+ConnectWatch/
+├── ConnectWatch.exe
 ├── config.yaml              (created on first launch)
 └── data/                    (created on first launch)
     ├── network.db
-    ├── NetworkMonitor.log
-    └── NetworkMonitor-app.log
+    ├── ConnectWatch.log
+    └── ConnectWatch-app.log
 ```
 
 ---
@@ -104,7 +104,7 @@ cd network-monitor
 .\build.ps1
 ```
 
-This produces `NetworkMonitor.exe` with version `v1.0.0` and today's build date baked in via ldflags.
+This produces `ConnectWatch.exe` with version `v1.0.0` and today's build date baked in via ldflags.
 
 ### Rebuild and restart (development)
 ```powershell
@@ -203,14 +203,14 @@ go test ./...
 
 ## Releasing
 
-Network Monitor checks for updates by fetching [`update-manifest.json`](update-manifest.json) from GitHub. The app compares the manifest `version` to the version baked into `NetworkMonitor.exe` at build time.
+ConnectWatch checks for updates by fetching [`update-manifest.json`](update-manifest.json) from GitHub. The app compares the manifest `version` to the version baked into `ConnectWatch.exe` at build time.
 
 ### Manifest format
 
 ```json
 {
   "version": "v1.0.0",
-  "download_url": "https://github.com/mdkeenan/network-monitor/releases/download/v1.0.0/NetworkMonitor.exe",
+  "download_url": "https://github.com/mdkeenan/network-monitor/releases/download/v1.0.0/ConnectWatch.exe",
   "notes": "Optional message shown in Settings when an update is available."
 }
 ```
@@ -232,12 +232,12 @@ Users point `update_manifest_url` in `config.yaml` at that URL (included in the 
    ```powershell
    .\build.ps1
    ```
-3. **Create a GitHub Release** tagged `v1.0.1` and upload `NetworkMonitor.exe` as a release asset.
+3. **Create a GitHub Release** tagged `v1.0.1` and upload `ConnectWatch.exe` as a release asset.
 4. **Update `update-manifest.json`** on `main` with the new version and download URL:
    ```json
    {
      "version": "v1.0.1",
-     "download_url": "https://github.com/mdkeenan/network-monitor/releases/download/v1.0.1/NetworkMonitor.exe",
+     "download_url": "https://github.com/mdkeenan/network-monitor/releases/download/v1.0.1/ConnectWatch.exe",
      "notes": "Describe what changed."
    }
    ```

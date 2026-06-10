@@ -474,7 +474,7 @@ func (s *Server) handleBugReport(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 25*time.Second)
 	defer cancel()
 
-	appLogPath := filepath.Join(s.baseDir, s.cfg.DataDir, "NetworkMonitor-app.log")
+	appLogPath := filepath.Join(s.baseDir, s.cfg.DataDir, "ConnectWatch-app.log")
 	result, err := report.Submit(ctx, s.cfg.BugReportURL, s.version, s.instanceID, body.Description, appLogPath)
 	if err != nil {
 		writeError(w, http.StatusBadGateway, fmt.Errorf("send bug report: %w", err))

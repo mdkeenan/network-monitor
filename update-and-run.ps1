@@ -1,4 +1,4 @@
-# Rebuild NetworkMonitor, stop any running copy (including port conflicts), and start fresh.
+# Rebuild ConnectWatch, stop any running copy (including port conflicts), and start fresh.
 #
 # Usage:
 #   .\update-and-run.ps1                 Build, stop old instance, run in this window
@@ -87,15 +87,29 @@ function Stop-ProcessTree {
     return -not (Get-Process -Id $ProcessId -ErrorAction SilentlyContinue)
 }
 
-function Stop-NetworkMonitorInstance {
+function Test-ConnectWatchProcess {
+    param(
+        [System.Diagnostics.Process]$Process
+    )
+
+    if ($Process.ProcessName -in @("ConnectWatch", "NetworkMonitor")) {
+        return $true
+    }
+
+    return ($Process.Path -and ($Process.Path -like "*Network Monitoring*"))
+}
+
+function Stop-ConnectWatchInstance {
     param(
         [int]$Port
     )
 
     $targetIds = @()
 
-    Get-Process -Name "NetworkMonitor" -ErrorAction SilentlyContinue | ForEach-Object {
-        $targetIds += $_.Id
+    foreach ($processName in @("ConnectWatch", "NetworkMonitor")) {
+        Get-Process -Name $processName -ErrorAction SilentlyContinue | ForEach-Object {
+            $targetIds += $_.Id
+        }
     }
 
     $listeners = @(Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue)
@@ -105,10 +119,7 @@ function Stop-NetworkMonitorInstance {
             continue
         }
 
-        $isMonitor = ($proc.ProcessName -eq "NetworkMonitor") -or
-            ($proc.Path -and ($proc.Path -like "*Network Monitoring*"))
-
-        if ($isMonitor) {
+        if (Test-ConnectWatchProcess -Process $proc) {
             if ($proc.Id -notin $targetIds) {
                 $targetIds += $proc.Id
             }
@@ -119,7 +130,7 @@ function Stop-NetworkMonitorInstance {
     }
 
     if ($targetIds.Count -eq 0) {
-        Write-Host "No running NetworkMonitor instance found." -ForegroundColor DarkGray
+        Write-Host "No running ConnectWatch instance found." -ForegroundColor DarkGray
         return
     }
 
@@ -128,21 +139,25 @@ function Stop-NetworkMonitorInstance {
             continue
         }
 
-        Write-Host "Stopping NetworkMonitor (PID $processId)..." -ForegroundColor Yellow
+        Write-Host "Stopping ConnectWatch (PID $processId)..." -ForegroundColor Yellow
         if (-not (Stop-ProcessTree -ProcessId $processId)) {
             throw @"
-Could not stop NetworkMonitor (PID $processId).
+Could not stop ConnectWatch (PID $processId).
 Close the other monitor window with Ctrl+C, then run this script again.
 If it still will not stop, reboot or sign out/in, then retry.
 "@
         }
     }
 
-    $remaining = @(Get-Process -Name "NetworkMonitor" -ErrorAction SilentlyContinue)
+    $remaining = @(
+        Get-Process -Name "ConnectWatch" -ErrorAction SilentlyContinue
+    ) + @(
+        Get-Process -Name "NetworkMonitor" -ErrorAction SilentlyContinue
+    )
     if ($remaining.Count -eq 0) {
-        Write-Host "Stopped existing NetworkMonitor instance(s)." -ForegroundColor Green
+        Write-Host "Stopped existing ConnectWatch instance(s)." -ForegroundColor Green
     } else {
-        Write-Host "Stopped NetworkMonitor instance(s). $($remaining.Count) may still be exiting." -ForegroundColor Green
+        Write-Host "Stopped ConnectWatch instance(s). $($remaining.Count) may still be exiting." -ForegroundColor Green
     }
 }
 
@@ -168,9 +183,9 @@ function Wait-PortFree {
             continue
         }
 
-        $nonMonitor = @($blockers | Where-Object { $_.ProcessName -ne "NetworkMonitor" })
-        if ($nonMonitor.Count -gt 0) {
-            $proc = $nonMonitor[0]
+        $nonApp = @($blockers | Where-Object { -not (Test-ConnectWatchProcess -Process $_) })
+        if ($nonApp.Count -gt 0) {
+            $proc = $nonApp[0]
             throw "Port $Port is still in use by $($proc.ProcessName) (PID $($proc.Id))."
         }
 
@@ -181,7 +196,7 @@ function Wait-PortFree {
     return ($stillListening.Count -eq 0)
 }
 
-function Build-NetworkMonitor {
+function Build-ConnectWatch {
     $go = Get-GoExecutable
 
     Write-Host "Downloading Go module dependencies..." -ForegroundColor Cyan
@@ -190,9 +205,9 @@ function Build-NetworkMonitor {
         throw "go mod tidy failed with exit code $LASTEXITCODE"
     }
 
-    Write-Host "Building NetworkMonitor.exe (background app, no console window)..." -ForegroundColor Cyan
+    Write-Host "Building ConnectWatch.exe (background app, no console window)..." -ForegroundColor Cyan
     $env:CGO_ENABLED = "0"
-    & $go build -ldflags "-H windowsgui -s -w" -o NetworkMonitor.exe .
+    & $go build -ldflags "-H windowsgui -s -w" -o ConnectWatch.exe .
     if ($LASTEXITCODE -ne 0) {
         throw "go build failed with exit code $LASTEXITCODE"
     }
@@ -200,22 +215,22 @@ function Build-NetworkMonitor {
     Write-Host "Build succeeded." -ForegroundColor Green
 }
 
-function Start-NetworkMonitorApp {
+function Start-ConnectWatchApp {
     param(
         [int]$Port,
         [switch]$RunInBackground,
         [switch]$LaunchBrowser
     )
 
-    $exePath = Join-Path $PSScriptRoot "NetworkMonitor.exe"
+    $exePath = Join-Path $PSScriptRoot "ConnectWatch.exe"
     if (-not (Test-Path $exePath)) {
-        throw "NetworkMonitor.exe was not found. Run without -SkipBuild first."
+        throw "ConnectWatch.exe was not found. Run without -SkipBuild first."
     }
 
     $dashboardUrl = "http://127.0.0.1:$Port/"
 
     if ($RunInBackground) {
-        Write-Host "Starting NetworkMonitor in the background..." -ForegroundColor Cyan
+        Write-Host "Starting ConnectWatch in the background..." -ForegroundColor Cyan
         Start-Process -FilePath $exePath -WorkingDirectory $PSScriptRoot | Out-Null
 
         $deadline = (Get-Date).AddSeconds(10)
@@ -228,10 +243,10 @@ function Start-NetworkMonitorApp {
         }
 
         if (-not (Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue)) {
-            throw "NetworkMonitor did not start listening on port $Port. Check data\NetworkMonitor-app.log for errors."
+            throw "ConnectWatch did not start listening on port $Port. Check data\ConnectWatch-app.log for errors."
         }
 
-        Write-Host "NetworkMonitor is running in the system tray." -ForegroundColor Green
+        Write-Host "ConnectWatch is running in the system tray." -ForegroundColor Green
         Write-Host "Dashboard: $dashboardUrl" -ForegroundColor Green
 
         if ($LaunchBrowser) {
@@ -241,7 +256,7 @@ function Start-NetworkMonitorApp {
         return
     }
 
-    Write-Host "Starting NetworkMonitor (runs in the system tray; use tray icon -> Exit to stop)..." -ForegroundColor Cyan
+    Write-Host "Starting ConnectWatch (runs in the system tray; use tray icon -> Exit to stop)..." -ForegroundColor Cyan
     Write-Host "Dashboard: $dashboardUrl" -ForegroundColor Green
 
     if ($LaunchBrowser) {
@@ -258,24 +273,24 @@ function Start-NetworkMonitorApp {
 $configPath = Join-Path $PSScriptRoot "config.yaml"
 $webPort = Get-WebPortFromConfig -ConfigPath $configPath
 
-Write-Host "Network Monitor - update and run" -ForegroundColor Cyan
+Write-Host "ConnectWatch - update and run" -ForegroundColor Cyan
 Write-Host "Web port: $webPort" -ForegroundColor DarkGray
 Write-Host ""
 
 try {
-    Stop-NetworkMonitorInstance -Port $webPort
+    Stop-ConnectWatchInstance -Port $webPort
 
     if (-not (Wait-PortFree -Port $webPort)) {
-        throw "Port $webPort is still in use after stopping NetworkMonitor. Wait a moment and try again."
+        throw "Port $webPort is still in use after stopping ConnectWatch. Wait a moment and try again."
     }
 
     if (-not $SkipBuild) {
-        Build-NetworkMonitor
+        Build-ConnectWatch
     } else {
         Write-Host "Skipping build (-SkipBuild)." -ForegroundColor DarkGray
     }
 
-    Start-NetworkMonitorApp -Port $webPort -RunInBackground:$Background -LaunchBrowser:$OpenBrowser
+    Start-ConnectWatchApp -Port $webPort -RunInBackground:$Background -LaunchBrowser:$OpenBrowser
 }
 catch {
     Write-Host ""

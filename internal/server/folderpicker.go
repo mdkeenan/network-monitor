@@ -16,7 +16,7 @@ func pickFolderPath() (string, error) {
 	script := strings.Join([]string{
 		"Add-Type -AssemblyName System.Windows.Forms",
 		"$dialog = New-Object System.Windows.Forms.FolderBrowserDialog",
-		"$dialog.Description = 'Select a folder for Network Monitor data'",
+		"$dialog.Description = 'Select a folder for ConnectWatch data'",
 		"$dialog.ShowNewFolderButton = $true",
 		"if ($dialog.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { exit 2 }",
 		"[Console]::Out.Write($dialog.SelectedPath)",

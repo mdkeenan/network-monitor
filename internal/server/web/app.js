@@ -1012,7 +1012,7 @@ const initTimelinePopoutView = () => {
     return;
   }
   document.body.classList.add("timeline-popout-view");
-  document.title = "Network Status Timeline — Network Monitor";
+  document.title = "Network Status Timeline — ConnectWatch";
   try {
     const raw = localStorage.getItem(TIMELINE_MIRROR_STORAGE_KEY);
     if (raw) {
@@ -1414,10 +1414,10 @@ const closeDownloadPanel = () => {
 
 const extractDownloadFilename = (contentDisposition) => {
   if (!contentDisposition) {
-    return "network-monitor-export.zip";
+    return "connectwatch-export.zip";
   }
   const match = /filename="([^"]+)"/i.exec(contentDisposition);
-  return match?.[1] || "network-monitor-export.zip";
+  return match?.[1] || "connectwatch-export.zip";
 };
 
 const triggerDownload = async () => {

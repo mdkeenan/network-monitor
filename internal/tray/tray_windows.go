@@ -17,11 +17,11 @@ func runPlatform(cfg Config) {
 
 	systray.Run(func() {
 		systray.SetIcon(iconData)
-		systray.SetTitle("Network Monitor")
+		systray.SetTitle("ConnectWatch")
 		systray.SetTooltip(cfg.Tooltip)
 
 		openItem := systray.AddMenuItem("Open dashboard", "Open the web dashboard in your browser")
-		exitItem := systray.AddMenuItem("Exit", "Stop Network Monitor")
+		exitItem := systray.AddMenuItem("Exit", "Stop ConnectWatch")
 
 		go func() {
 			for {

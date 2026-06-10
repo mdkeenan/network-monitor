@@ -51,13 +51,13 @@ func run() (exitCode int) {
 	baseDir := paths.BaseDir()
 	cfg, err := config.Load(baseDir)
 	if err != nil {
-		winutil.ShowError("Network Monitor", fmt.Sprintf("Could not load config from %s:\n\n%v", filepath.Join(baseDir, "config.yaml"), err))
+		winutil.ShowError("ConnectWatch", fmt.Sprintf("Could not load config from %s:\n\n%v", filepath.Join(baseDir, "config.yaml"), err))
 		return 1
 	}
 
 	dataDir := filepath.Join(baseDir, cfg.DataDir)
 	if err := applog.Setup(dataDir); err != nil {
-		winutil.ShowError("Network Monitor", err.Error())
+		winutil.ShowError("ConnectWatch", err.Error())
 		return 1
 	}
 
@@ -122,9 +122,9 @@ func run() (exitCode int) {
 	report.Go(func() {
 		log.Printf("Dashboard: %s", dashboardURL)
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			msg := fmt.Sprintf("Port %d is already in use. Stop the other Network Monitor copy (system tray → Exit) or change web_port in config.yaml.", cfg.WebPort)
+			msg := fmt.Sprintf("Port %d is already in use. Stop the other ConnectWatch copy (system tray → Exit) or change web_port in config.yaml.", cfg.WebPort)
 			log.Printf("web server: %v", err)
-			winutil.ShowError("Network Monitor", msg)
+			winutil.ShowError("ConnectWatch", msg)
 			os.Exit(1)
 		}
 	})
@@ -147,7 +147,7 @@ func run() (exitCode int) {
 	}
 
 	tray.Run(tray.Config{
-		Tooltip:      fmt.Sprintf("Network Monitor — %s", dashboardURL),
+		Tooltip:      fmt.Sprintf("ConnectWatch — %s", dashboardURL),
 		DashboardURL: dashboardURL,
 		OnQuit:       shutdown,
 	})

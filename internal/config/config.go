@@ -34,7 +34,7 @@ type Config struct {
 
 func (c Config) TextLogPath(baseDir string) string {
 	if c.TextLogFile == "" {
-		return filepath.Join(baseDir, c.DataDir, "NetworkMonitor.log")
+		return filepath.Join(baseDir, c.DataDir, "ConnectWatch.log")
 	}
 	if filepath.IsAbs(c.TextLogFile) {
 		return c.TextLogFile
@@ -57,7 +57,7 @@ func Defaults() Config {
 		VerifyDelaySec:          5,
 		WebPort:                 8080,
 		DataDir:                 "data",
-		TextLogFile:             "data/NetworkMonitor.log",
+		TextLogFile:             "data/ConnectWatch.log",
 		RetentionDays:           365,
 		SpeedtestDownloadURL:    "https://speed.cloudflare.com/__down",
 		SpeedtestDownloadBytes:  10_000_000,

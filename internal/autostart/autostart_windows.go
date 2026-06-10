@@ -12,7 +12,7 @@ import (
 
 const (
 	runKeyPath = `Software\Microsoft\Windows\CurrentVersion\Run`
-	valueName  = "NetworkMonitor"
+	valueName  = "ConnectWatch"
 )
 
 func setEnabledPlatform(enabled bool) error {

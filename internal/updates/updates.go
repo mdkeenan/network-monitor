@@ -35,13 +35,13 @@ func Check(ctx context.Context, manifestURL, currentVersion, instanceID string) 
 
 	result := Result{
 		CurrentVersion: currentVersion,
-		Message:        fmt.Sprintf("You are running Network Monitor %s.", currentVersion),
+		Message:        fmt.Sprintf("You are running ConnectWatch %s.", currentVersion),
 	}
 
 	manifestURL = strings.TrimSpace(manifestURL)
 	if manifestURL == "" {
 		result.Message = fmt.Sprintf(
-			"You are running Network Monitor %s. No update source is configured.",
+			"You are running ConnectWatch %s. No update source is configured.",
 			currentVersion,
 		)
 		return result, nil

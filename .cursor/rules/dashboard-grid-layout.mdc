@@ -88,4 +88,4 @@ Permanent rules for all dashboard layout and edit-mode work in `style.css`, `wid
 - `--widget-panel-inset` defined once in `:root` only.
 - `app.js` and `widgets.js` stay monolithic — do not split into modules.
 - `window.WidgetDashboard` exported API is stable.
-- After web file changes: rebuild `NetworkMonitor.exe` and hard-refresh browser (Ctrl+F5) — assets are embedded; stale process serves old files.
+- After web file changes: rebuild `ConnectWatch.exe` and hard-refresh browser (Ctrl+F5) — assets are embedded; stale process serves old files.

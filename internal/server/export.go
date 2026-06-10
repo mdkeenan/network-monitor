@@ -130,7 +130,7 @@ func (s *Server) handleExport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	zipName := fmt.Sprintf("network-monitor-export-%s-to-%s.zip", payload.FromDate, payload.ToDate)
+	zipName := fmt.Sprintf("connectwatch-export-%s-to-%s.zip", payload.FromDate, payload.ToDate)
 	w.Header().Set("Content-Type", "application/zip")
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, zipName))
 	_, _ = io.Copy(w, &zipBuf)
@@ -232,25 +232,25 @@ func buildExportFiles(payload exportPayload) ([]exportFile, error) {
 		switch format {
 		case "log":
 			files = append(files, exportFile{
-				Filename:    fmt.Sprintf("network-monitor-export-%s-to-%s.log", payload.FromDate, payload.ToDate),
+				Filename:    fmt.Sprintf("connectwatch-export-%s-to-%s.log", payload.FromDate, payload.ToDate),
 				ContentType: "text/plain; charset=utf-8",
 				Data:        buildExportLog(payload),
 			})
 		case "md":
 			files = append(files, exportFile{
-				Filename:    fmt.Sprintf("network-monitor-export-%s-to-%s.md", payload.FromDate, payload.ToDate),
+				Filename:    fmt.Sprintf("connectwatch-export-%s-to-%s.md", payload.FromDate, payload.ToDate),
 				ContentType: "text/markdown; charset=utf-8",
 				Data:        buildExportMarkdown(payload),
 			})
 		case "html":
 			files = append(files, exportFile{
-				Filename:    fmt.Sprintf("network-monitor-export-%s-to-%s.html", payload.FromDate, payload.ToDate),
+				Filename:    fmt.Sprintf("connectwatch-export-%s-to-%s.html", payload.FromDate, payload.ToDate),
 				ContentType: "text/html; charset=utf-8",
 				Data:        buildExportHTML(payload),
 			})
 		case "csv":
 			for _, dataType := range payload.DataTypes {
-				name := fmt.Sprintf("network-monitor-%s-%s-to-%s.csv", dataType, payload.FromDate, payload.ToDate)
+				name := fmt.Sprintf("connectwatch-%s-%s-to-%s.csv", dataType, payload.FromDate, payload.ToDate)
 				data, err := buildExportCSV(payload, dataType)
 				if err != nil {
 					return nil, err
@@ -287,7 +287,7 @@ func exportEventTypeLabel(eventType string) string {
 
 func buildExportLog(payload exportPayload) []byte {
 	var b strings.Builder
-	fmt.Fprintf(&b, "Network Monitor Export\n")
+	fmt.Fprintf(&b, "ConnectWatch Export\n")
 	fmt.Fprintf(&b, "Range: %s to %s UTC\n", exportTS(payload.From), exportTS(payload.To))
 	fmt.Fprintf(&b, "Target: %s\n", payload.Target)
 	fmt.Fprintf(&b, "Generated: %s UTC\n", exportTS(payload.Generated))
@@ -355,7 +355,7 @@ func buildExportLog(payload exportPayload) []byte {
 
 func buildExportMarkdown(payload exportPayload) []byte {
 	var b strings.Builder
-	fmt.Fprintf(&b, "# Network Monitor Export\n")
+	fmt.Fprintf(&b, "# ConnectWatch Export\n")
 	fmt.Fprintf(&b, "**Range:** %s to %s UTC\n", exportTS(payload.From), exportTS(payload.To))
 	fmt.Fprintf(&b, "**Target:** %s\n", payload.Target)
 	fmt.Fprintf(&b, "**Generated:** %s UTC\n\n", exportTS(payload.Generated))
@@ -446,7 +446,7 @@ func buildExportHTML(payload exportPayload) []byte {
 	var b strings.Builder
 	b.WriteString("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\">")
 	b.WriteString("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">")
-	b.WriteString("<title>Network Monitor Export</title><style>")
+	b.WriteString("<title>ConnectWatch Export</title><style>")
 	b.WriteString(`body{margin:0;background:#0f1117;color:#e2e8f0;font-family:Segoe UI,system-ui,sans-serif;line-height:1.5;}
 header{padding:1.5rem 1.25rem 1rem;border-bottom:1px solid #243044;}
 h1{margin:0 0 .5rem;font-size:1.6rem;}
@@ -471,7 +471,7 @@ pre.trace-output{background:#1a2332;border:1px solid #243044;border-radius:8px;p
 .traceroute-block{margin:0 0 1.25rem;}
 .traceroute-block h3{margin:0 0 .5rem;font-size:1rem;color:#e2e8f0;}`)
 	b.WriteString("</style></head><body>")
-	fmt.Fprintf(&b, "<header><h1>Network Monitor Export</h1>")
+	fmt.Fprintf(&b, "<header><h1>ConnectWatch Export</h1>")
 	fmt.Fprintf(&b, "<p class=\"meta\"><strong>Range:</strong> %s to %s UTC</p>", html.EscapeString(exportTS(payload.From)), html.EscapeString(exportTS(payload.To)))
 	fmt.Fprintf(&b, "<p class=\"meta\"><strong>Target:</strong> %s</p>", html.EscapeString(payload.Target))
 	fmt.Fprintf(&b, "<p class=\"meta\"><strong>Generated:</strong> %s UTC</p></header>", html.EscapeString(exportTS(payload.Generated)))

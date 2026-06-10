@@ -8,7 +8,7 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-const mutexName = "Global\\NetworkMonitor.SingleInstance.v1"
+const mutexName = "Global\\ConnectWatch.SingleInstance.v1"
 
 var mutexHandle windows.Handle
 
@@ -47,8 +47,8 @@ func ShowAlreadyRunning() {
 		mbOK       = 0x00000000
 		mbIconInfo = 0x00000040
 	)
-	title, _ := windows.UTF16PtrFromString("Network Monitor")
-	text, _ := windows.UTF16PtrFromString("Network Monitor is already running. Check the system tray near the clock.")
+	title, _ := windows.UTF16PtrFromString("ConnectWatch")
+	text, _ := windows.UTF16PtrFromString("ConnectWatch is already running. Check the system tray near the clock.")
 	user32 := windows.NewLazySystemDLL("user32.dll")
 	messageBox := user32.NewProc("MessageBoxW")
 	_, _, _ = messageBox.Call(

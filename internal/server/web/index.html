@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Network Monitor</title>
+  <title>ConnectWatch</title>
   <link rel="stylesheet" href="/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
@@ -12,7 +12,7 @@
   <header>
     <div class="header-row">
       <div>
-        <h1>Network Monitor</h1>
+        <h1>ConnectWatch</h1>
         <p id="subtitle-private-ip" class="header-subtitle-line">Source Private IP: <span class="subtitle-ip-copy-wrap"><button type="button" id="subtitle-private-ip-btn" class="header-action-btn subtitle-target-btn" aria-label="Copy private IP address to clipboard">Loading...</button><span id="subtitle-private-ip-copied" class="header-info-popup subtitle-ip-copied-popup" role="status">Copied</span></span> <span class="subtitle-ip-copy-wrap"><button type="button" id="subtitle-private-prefix-btn" class="header-action-btn subtitle-target-btn" aria-label="Copy subnet mask to clipboard">/—</button><span id="subtitle-private-prefix-copied" class="header-info-popup subtitle-ip-copied-popup" role="status">Copied</span></span> Default Gateway: <span class="subtitle-ip-copy-wrap"><button type="button" id="subtitle-private-gateway-btn" class="header-action-btn subtitle-target-btn" aria-label="Copy default gateway to clipboard">Loading...</button><span id="subtitle-private-gateway-copied" class="header-info-popup subtitle-ip-copied-popup" role="status">Copied</span></span></p>
         <p id="subtitle-public-ip" class="header-subtitle-line">Source Public IP: <span class="subtitle-ip-copy-wrap"><button type="button" id="subtitle-public-ip-btn" class="header-action-btn subtitle-target-btn" aria-label="Copy public IP address to clipboard">Loading...</button><span id="subtitle-public-ip-copied" class="header-info-popup subtitle-ip-copied-popup" role="status">Copied</span></span><span id="subtitle-public-ip-isp" class="subtitle-ip-info"></span></p>
         <p id="subtitle" class="header-subtitle-line">
@@ -390,7 +390,7 @@
         </div>
         <hr class="about-divider" aria-hidden="true">
         <div class="about-body">
-          <p class="about-description">Network Monitor is a self-contained Windows application for tracking internet connectivity over time. It runs ping and traceroute probes on a configurable schedule, records results in a local SQLite database, and presents them through a browser-based dashboard — including latency history, route visualization, and speed tests. No installation, no cloud services, no external dependencies.</p>
+          <p class="about-description">ConnectWatch is a self-contained Windows application for tracking internet connectivity over time. It runs ping and traceroute probes on a configurable schedule, records results in a local SQLite database, and presents them through a browser-based dashboard — including latency history, route visualization, and speed tests. No installation, no cloud services, no external dependencies.</p>
         </div>
       </div>
       <div class="about-lower-stack">
@@ -658,7 +658,7 @@
 
         <p id="download-zip-note" class="download-zip-note" hidden>ⓘ Multiple files will be packaged as a ZIP archive.</p>
         <p id="download-error" class="app-settings-error" hidden></p>
-        <a id="download-raw-log-link" class="download-raw-link" href="/api/log/download" download="NetworkMonitor.log">Download raw activity log</a>
+        <a id="download-raw-log-link" class="download-raw-link" href="/api/log/download" download="ConnectWatch.log">Download raw activity log</a>
 
         <div class="app-settings-actions">
           <div class="app-settings-actions-right">

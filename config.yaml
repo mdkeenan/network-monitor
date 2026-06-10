@@ -6,7 +6,7 @@ required_successes: 5
 verify_delay_sec: 5
 web_port: 8080
 data_dir: data
-text_log_file: data/NetworkMonitor.log
+text_log_file: data/ConnectWatch.log
 retention_days: 365
 speedtest_download_url: https://speed.cloudflare.com/__down
 speedtest_download_bytes: 10000000
