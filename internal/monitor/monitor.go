@@ -8,11 +8,11 @@ import (
 	"sync"
 	"time"
 
-	"network-monitor/internal/config"
-	"network-monitor/internal/database"
-	"network-monitor/internal/publicip"
-	"network-monitor/internal/report"
-	"network-monitor/internal/textlog"
+	"connectwatch/internal/config"
+	"connectwatch/internal/database"
+	"connectwatch/internal/publicip"
+	"connectwatch/internal/report"
+	"connectwatch/internal/textlog"
 )
 
 type LiveStatus struct {

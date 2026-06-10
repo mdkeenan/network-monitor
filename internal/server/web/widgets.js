@@ -1,6 +1,7 @@
-const WIDGET_STORAGE_KEY = "networkMonitor.dashboard.widgets";
+const WIDGET_STORAGE_KEY = "connectWatch.dashboard.widgets";
 const WIDGET_PREFS_VERSION = 1;
 const LEGACY_WIDGET_STORAGE_KEYS = [
+  "networkMonitor.dashboard.widgets",
   "networkMonitor.dashboard.widgets.v3",
   "networkMonitor.dashboard.widgets.v2",
   "networkMonitor.dashboard.widgets.v1",
@@ -294,7 +295,8 @@ const getLayoutVisibilityPrefs = (prefs) =>
 const isLayoutWidgetVisible = (widgetId, prefs) =>
   isWidgetVisible(getLayoutVisibilityPrefs(prefs), widgetId);
 
-const LAYOUT_STORAGE_KEY = "networkMonitor.dashboard.layout";
+const LAYOUT_STORAGE_KEY = "connectWatch.dashboard.layout";
+const LEGACY_LAYOUT_STORAGE_KEYS = ["networkMonitor.dashboard.layout"];
 const LAYOUT_VERSION = 25;
 const SUMMARY_CARDS_MIN_DASHBOARD_ROW_SPAN = 3;
 const SUMMARY_CARDS_DASHBOARD_ROW_SPAN = 4;
@@ -803,9 +805,25 @@ const normalizeLayout = (saved) => {
   return migrateLayoutVersion(layout, savedVersion);
 };
 
+const readStoredDashboardLayoutRaw = () => {
+  const current = localStorage.getItem(LAYOUT_STORAGE_KEY);
+  if (current) {
+    return current;
+  }
+
+  for (const legacyKey of LEGACY_LAYOUT_STORAGE_KEYS) {
+    const legacyRaw = localStorage.getItem(legacyKey);
+    if (legacyRaw) {
+      return legacyRaw;
+    }
+  }
+
+  return null;
+};
+
 const loadDashboardLayout = () => {
   try {
-    const raw = localStorage.getItem(LAYOUT_STORAGE_KEY);
+    const raw = readStoredDashboardLayoutRaw();
     if (!raw) {
       return getDefaultLayout();
     }

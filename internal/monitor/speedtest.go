@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"network-monitor/internal/report"
+	"connectwatch/internal/report"
 )
 
 const (

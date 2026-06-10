@@ -1,5 +1,5 @@
 {
   "version": "v1.0.2",
-  "download_url": "https://github.com/mdkeenan/network-monitor/releases/download/v1.0.2/ConnectWatch.exe",
+  "download_url": "https://github.com/mdkeenan/ConnectWatch/releases/download/v1.0.2/ConnectWatch.exe",
   "notes": "Manual bug reports from Settings, opt-in automatic crash reports, and a Windows startup toggle in the UI."
 }

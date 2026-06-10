@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"network-monitor/internal/publicip"
+	"connectwatch/internal/publicip"
 )
 
 var (

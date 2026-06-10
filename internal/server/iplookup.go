@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"network-monitor/internal/iplookup"
+	"connectwatch/internal/iplookup"
 )
 
 type ipLookupResponse struct {

@@ -1,4 +1,4 @@
-/network-monitor.exe
+/ConnectWatch.exe
 /data/
 *.db
 *.db-shm

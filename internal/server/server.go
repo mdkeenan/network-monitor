@@ -15,14 +15,14 @@ import (
 	"strconv"
 	"time"
 
-	"network-monitor/internal/autostart"
-	"network-monitor/internal/config"
-	"network-monitor/internal/database"
-	"network-monitor/internal/instanceid"
-	"network-monitor/internal/monitor"
-	"network-monitor/internal/report"
-	"network-monitor/internal/textlog"
-	"network-monitor/internal/updates"
+	"connectwatch/internal/autostart"
+	"connectwatch/internal/config"
+	"connectwatch/internal/database"
+	"connectwatch/internal/instanceid"
+	"connectwatch/internal/monitor"
+	"connectwatch/internal/report"
+	"connectwatch/internal/textlog"
+	"connectwatch/internal/updates"
 )
 
 //go:embed web/*

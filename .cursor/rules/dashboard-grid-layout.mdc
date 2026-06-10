@@ -16,7 +16,7 @@ Permanent rules for all dashboard layout and edit-mode work in `style.css`, `wid
 
 - CSS grid on `.dashboard-grid` in `style.css` with `--grid-columns: 36`.
 - Each widget occupies `{ col, row, colSpan, rowSpan }` in grid units.
-- Layout persisted in `localStorage` key `networkMonitor.dashboard.layout` as `{ version: 23, widgets: { [id]: { col, row, colSpan, rowSpan } }, summaryCards: [] }`. Do not rename key or envelope.
+- Layout persisted in `localStorage` key `connectWatch.dashboard.layout` as `{ version: 23, widgets: { [id]: { col, row, colSpan, rowSpan } }, summaryCards: [] }`. Do not rename key or envelope.
 - Grid lines are cell boundaries. `--dashboard-grid-gap` is `0px` on `.dashboard-grid` — never change track gap.
 
 ## The gap between panels

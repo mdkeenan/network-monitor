@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"network-monitor/internal/database"
+	"connectwatch/internal/database"
 )
 
 const CacheTTL = 24 * time.Hour

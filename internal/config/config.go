@@ -43,8 +43,8 @@ func (c Config) TextLogPath(baseDir string) string {
 }
 
 const (
-	defaultUpdateManifestURL = "https://raw.githubusercontent.com/mdkeenan/network-monitor/main/update-manifest.json"
-	defaultBugReportURL      = "https://reports.swift-raven.org/network-monitor/bug"
+	defaultUpdateManifestURL = "https://raw.githubusercontent.com/mdkeenan/ConnectWatch/main/update-manifest.json"
+	defaultBugReportURL      = "https://reports.swift-raven.org/connectwatch/bug"
 )
 
 func Defaults() Config {

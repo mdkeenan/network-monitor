@@ -219,8 +219,9 @@ let lineChartLayerVisible = {
   outage: true,
   blip: true,
 };
-const TIMELINE_MIRROR_CHANNEL = "network-monitor-timeline-mirror";
-const TIMELINE_MIRROR_STORAGE_KEY = "networkMonitor.timeline.mirror.v1";
+const TIMELINE_MIRROR_CHANNEL = "connectwatch-timeline-mirror";
+const LEGACY_TIMELINE_MIRROR_STORAGE_KEYS = ["networkMonitor.timeline.mirror.v1"];
+const TIMELINE_MIRROR_STORAGE_KEY = "connectWatch.timeline.mirror.v1";
 const TIMELINE_POPOUT_QUERY = "view=timeline";
 let timelineMirrorSyncPaused = false;
 let timelineMirrorApplied = false;
@@ -1014,7 +1015,15 @@ const initTimelinePopoutView = () => {
   document.body.classList.add("timeline-popout-view");
   document.title = "Network Status Timeline — ConnectWatch";
   try {
-    const raw = localStorage.getItem(TIMELINE_MIRROR_STORAGE_KEY);
+    let raw = localStorage.getItem(TIMELINE_MIRROR_STORAGE_KEY);
+    if (!raw) {
+      for (const legacyKey of LEGACY_TIMELINE_MIRROR_STORAGE_KEYS) {
+        raw = localStorage.getItem(legacyKey);
+        if (raw) {
+          break;
+        }
+      }
+    }
     if (raw) {
       pendingTimelineMirrorState = JSON.parse(raw);
     }

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"network-monitor/internal/database"
+	"connectwatch/internal/database"
 )
 
 func TestParseExportList(t *testing.T) {

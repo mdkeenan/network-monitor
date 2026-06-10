@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"network-monitor/internal/database"
-	"network-monitor/internal/publicip"
+	"connectwatch/internal/database"
+	"connectwatch/internal/publicip"
 )
 
 const exportRowLimit = 50_000_000

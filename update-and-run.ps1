@@ -92,11 +92,11 @@ function Test-ConnectWatchProcess {
         [System.Diagnostics.Process]$Process
     )
 
-    if ($Process.ProcessName -in @("ConnectWatch", "NetworkMonitor")) {
+    if ($Process.ProcessName -eq "ConnectWatch") {
         return $true
     }
 
-    return ($Process.Path -and ($Process.Path -like "*Network Monitoring*"))
+    return ($Process.Path -and ($Process.Path -like "*ConnectWatch*"))
 }
 
 function Stop-ConnectWatchInstance {
@@ -106,10 +106,8 @@ function Stop-ConnectWatchInstance {
 
     $targetIds = @()
 
-    foreach ($processName in @("ConnectWatch", "NetworkMonitor")) {
-        Get-Process -Name $processName -ErrorAction SilentlyContinue | ForEach-Object {
-            $targetIds += $_.Id
-        }
+    Get-Process -Name "ConnectWatch" -ErrorAction SilentlyContinue | ForEach-Object {
+        $targetIds += $_.Id
     }
 
     $listeners = @(Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue)
@@ -151,8 +149,6 @@ If it still will not stop, reboot or sign out/in, then retry.
 
     $remaining = @(
         Get-Process -Name "ConnectWatch" -ErrorAction SilentlyContinue
-    ) + @(
-        Get-Process -Name "NetworkMonitor" -ErrorAction SilentlyContinue
     )
     if ($remaining.Count -eq 0) {
         Write-Host "Stopped existing ConnectWatch instance(s)." -ForegroundColor Green

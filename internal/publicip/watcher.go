@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"network-monitor/internal/database"
-	"network-monitor/internal/iplookup"
-	"network-monitor/internal/textlog"
+	"connectwatch/internal/database"
+	"connectwatch/internal/iplookup"
+	"connectwatch/internal/textlog"
 )
 
 const (

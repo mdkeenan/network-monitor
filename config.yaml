@@ -14,7 +14,7 @@ speedtest_upload_url: https://speed.cloudflare.com/__up
 speedtest_upload_bytes: 5000000
 speedtest_interval_min: 60
 auto_check_updates: true
-update_manifest_url: https://raw.githubusercontent.com/mdkeenan/network-monitor/main/update-manifest.json
-bug_report_url: https://reports.swift-raven.org/network-monitor/bug
+update_manifest_url: https://raw.githubusercontent.com/mdkeenan/ConnectWatch/main/update-manifest.json
+bug_report_url: https://reports.swift-raven.org/connectwatch/bug
 auto_send_crash_reports: false
 run_at_startup: true

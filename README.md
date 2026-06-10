@@ -99,8 +99,8 @@ ConnectWatch/
 Requires [Go 1.22+](https://go.dev/dl/).
 
 ```powershell
-git clone https://github.com/mdkeenan/network-monitor.git
-cd network-monitor
+git clone https://github.com/mdkeenan/ConnectWatch.git
+cd ConnectWatch
 .\build.ps1
 ```
 
@@ -210,14 +210,14 @@ ConnectWatch checks for updates by fetching [`update-manifest.json`](update-mani
 ```json
 {
   "version": "v1.0.0",
-  "download_url": "https://github.com/mdkeenan/network-monitor/releases/download/v1.0.0/ConnectWatch.exe",
+  "download_url": "https://github.com/mdkeenan/ConnectWatch/releases/download/v1.0.0/ConnectWatch.exe",
   "notes": "Optional message shown in Settings when an update is available."
 }
 ```
 
 The manifest is served from:
 
-`https://raw.githubusercontent.com/mdkeenan/network-monitor/main/update-manifest.json`
+`https://raw.githubusercontent.com/mdkeenan/ConnectWatch/main/update-manifest.json`
 
 Users point `update_manifest_url` in `config.yaml` at that URL (included in the repo template).
 
@@ -237,7 +237,7 @@ Users point `update_manifest_url` in `config.yaml` at that URL (included in the 
    ```json
    {
      "version": "v1.0.1",
-     "download_url": "https://github.com/mdkeenan/network-monitor/releases/download/v1.0.1/ConnectWatch.exe",
+     "download_url": "https://github.com/mdkeenan/ConnectWatch/releases/download/v1.0.1/ConnectWatch.exe",
      "notes": "Describe what changed."
    }
    ```
@@ -272,4 +272,4 @@ Copyright © 2026 [Michael Keenan](https://www.linkedin.com/in/michaeldkeenan/)
 
 ## Author
 
-Built by **Michael Keenan** — feedback and contributions welcome via [GitHub Issues](https://github.com/mdkeenan/network-monitor/issues).
+Built by **Michael Keenan** — feedback and contributions welcome via [GitHub Issues](https://github.com/mdkeenan/ConnectWatch/issues).

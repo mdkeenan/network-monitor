@@ -1,4 +1,4 @@
-module network-monitor
+module connectwatch
 
 go 1.22
 

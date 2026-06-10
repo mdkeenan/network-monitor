@@ -44,7 +44,7 @@ func (l *Logger) Clear() error {
 
 func (l *Logger) SessionStart(target string, pingSec, verifySec, recoverCount, outageTraceSec, healthyTraceSec int) error {
 	body := fmt.Sprintf(`%s
-  NETWORK MONITOR — SESSION STARTED
+  CONNECTWATCH — SESSION STARTED
 %s
   Time     : %s
   Target   : %s
