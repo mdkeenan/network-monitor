@@ -88,7 +88,7 @@ ConnectWatch/
 ├── config.yaml              (created on first launch)
 └── data/                    (created on first launch)
     ├── network.db
-    ├── ConnectWatch.log
+    ├── ConnectWatch_Log.txt
     └── ConnectWatch-app.log
 ```
 

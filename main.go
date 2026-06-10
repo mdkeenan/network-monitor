@@ -78,6 +78,9 @@ func run() (exitCode int) {
 	}
 
 	textLogPath := cfg.TextLogPath(baseDir)
+	if err := textlog.MigrateLegacyPath(textLogPath); err != nil {
+		log.Printf("text log migration: %v", err)
+	}
 	textLog, err := textlog.Open(textLogPath)
 	if err != nil {
 		log.Fatalf("open text log: %v", err)

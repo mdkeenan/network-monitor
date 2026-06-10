@@ -14,6 +14,35 @@ type Logger struct {
 	mu   sync.Mutex
 }
 
+var legacyTextLogNames = []string{
+	"ConnectWatch.log",
+	"NetworkMonitor_Log.txt",
+	"NetworkMonitor.log",
+}
+
+// MigrateLegacyPath renames an older text log file in the same directory when target is missing.
+func MigrateLegacyPath(target string) error {
+	if _, err := os.Stat(target); err == nil {
+		return nil
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+
+	dir := filepath.Dir(target)
+	for _, name := range legacyTextLogNames {
+		legacyPath := filepath.Join(dir, name)
+		if _, err := os.Stat(legacyPath); err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return err
+		}
+		return os.Rename(legacyPath, target)
+	}
+
+	return nil
+}
+
 func Open(path string) (*Logger, error) {
 	dir := filepath.Dir(path)
 	if dir != "" && dir != "." {
