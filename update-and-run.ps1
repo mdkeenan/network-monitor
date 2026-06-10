@@ -6,12 +6,14 @@
 #   .\update-and-run.ps1 -Background     Build, stop old instance, run detached
 #   .\update-and-run.ps1 -SkipBuild      Restart only (no compile)
 #   .\update-and-run.ps1 -SkipBuild -Background -OpenBrowser
+#   .\update-and-run.ps1 -Background -Test
 
 [CmdletBinding()]
 param(
     [switch]$SkipBuild,
     [switch]$Background,
-    [switch]$OpenBrowser
+    [switch]$OpenBrowser,
+    [switch]$Test
 )
 
 $ErrorActionPreference = "Stop"
@@ -284,6 +286,14 @@ try {
         Build-ConnectWatch
     } else {
         Write-Host "Skipping build (-SkipBuild)." -ForegroundColor DarkGray
+    }
+
+    if ($Test) {
+        Write-Host "Running tests (-Test)..." -ForegroundColor Cyan
+        & (Join-Path $PSScriptRoot "scripts\test.ps1")
+        if ($LASTEXITCODE -ne 0) {
+            throw "Tests failed with exit code $LASTEXITCODE"
+        }
     }
 
     Start-ConnectWatchApp -Port $webPort -RunInBackground:$Background -LaunchBrowser:$OpenBrowser

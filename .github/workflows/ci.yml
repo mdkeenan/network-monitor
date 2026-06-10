@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  go-test:
+    name: go-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+
+      - name: Go vet
+        run: go vet ./...
+
+      - name: Go test
+        run: go test ./...
+
+      - name: PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module PSScriptAnalyzer -Force
+          $issues = Invoke-ScriptAnalyzer -Path build.ps1, update-and-run.ps1, scripts/test.ps1, scripts/release.ps1 -Severity Error
+          if ($issues) {
+            $issues | Format-Table -AutoSize
+            exit 1
+          }
+
+  windows-e2e:
+    name: windows-e2e
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Build ConnectWatch.exe
+        shell: pwsh
+        run: |
+          $env:CGO_ENABLED = "0"
+          go build -ldflags "-H windowsgui -s -w" -o ConnectWatch.exe .
+
+      - name: Install Playwright dependencies
+        working-directory: tests/e2e
+        run: |
+          npm install
+          npx playwright install chromium
+
+      - name: Start ConnectWatch
+        shell: pwsh
+        run: |
+          Start-Process -FilePath .\ConnectWatch.exe -WorkingDirectory $PWD
+          $deadline = (Get-Date).AddSeconds(45)
+          while ((Get-Date) -lt $deadline) {
+            $listening = Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue
+            if ($listening) { break }
+            Start-Sleep -Seconds 1
+          }
+          if (-not (Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue)) {
+            throw "ConnectWatch did not start listening on port 8080"
+          }
+
+      - name: Run Playwright tests
+        working-directory: tests/e2e
+        run: npm test
+        env:
+          CI: true
+          CONNECTWATCH_BASE_URL: http://127.0.0.1:8080
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: tests/e2e/playwright-report/
+          retention-days: 7
+
+      - name: Stop ConnectWatch
+        if: always()
+        shell: pwsh
+        run: |
+          Get-Process -Name ConnectWatch -ErrorAction SilentlyContinue | Stop-Process -Force

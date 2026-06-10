@@ -1,0 +1,46 @@
+---
+description: ConnectWatch build, test, release, and agent workflow conventions
+alwaysApply: true
+---
+
+# ConnectWatch project conventions
+
+## Build and run
+
+- Build: `.\build.ps1` or `.\update-and-run.ps1 -Background`
+- Dev loop with tests: `.\update-and-run.ps1 -Background -Test`
+- Dashboard: `http://127.0.0.1:8080/` (port from `config.yaml` `web_port`)
+- After changes to `internal/server/web/*`: rebuild `ConnectWatch.exe` and hard-refresh the browser (Ctrl+F5). Assets are embedded in the binary.
+
+## Test
+
+- Unit tests: `.\scripts\test.ps1` or `go test ./...`
+- Dashboard e2e: app running, then `cd tests\e2e && npm test`
+- When fixing a bug, add a regression test (`*_test.go` or Playwright spec).
+
+## Code structure
+
+- `app.js` and `widgets.js` stay monolithic — do not split into modules.
+- `window.WidgetDashboard` API is stable.
+- Dashboard grid rules: see `dashboard-grid-layout.mdc`.
+
+## Release
+
+- Never commit `ConnectWatch.exe` (gitignored build artifact).
+- Ship via GitHub Releases + `update-manifest.json`.
+- Use `.\scripts\release.ps1 -Version vX.Y.Z -Notes "..."` after human approval of the version bump.
+
+## Cursor modes
+
+- **Plan mode** — multi-file features, layout migrations, API/schema changes.
+- **Debug mode** — intermittent bugs; use logs in `data/ConnectWatch-app.log` and `data/ConnectWatch_Log.txt`.
+- **IDE browser** — dashboard UI work at `http://127.0.0.1:8080/`.
+
+## Review prompts
+
+Before accepting large agent diffs, ask: "Is this the root cause?" and "Are there edge cases we missed?"
+
+## Reference
+
+- Workflow: `docs/notes/connectwatch-workflow.md`
+- Cursor concepts: `docs/notes/cursor-coding-notes.md`
