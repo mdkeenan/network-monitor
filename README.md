@@ -123,7 +123,6 @@ This produces `ConnectWatch.exe` with version `v1.0.0` and today's build date ba
 - **Run tests:** `.\scripts\test.ps1`
 - **Ship a release:** `.\scripts\release.ps1 -Version v1.0.4 -Notes "..."` (requires `gh auth login`)
 - **Dashboard e2e:** `cd tests\e2e && npm install && npm test` (app must be running on port 8080)
-- **Cursor workflow notes:** [docs/notes/](docs/notes/)
 
 ---
 

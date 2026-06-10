@@ -1,6 +1,19 @@
+# Build output
 /ConnectWatch.exe
+*.exe~
+
+# Runtime data (logs, SQLite, user content)
 /data/
 *.db
 *.db-shm
 *.db-wal
 *.log
+
+# Personal reference docs (operator manuals, cheat sheets — not app or .cursor/)
+/docs/notes/
+
+# Doc build tooling (generates local PDF/HTML from docs/notes/)
+/scripts/build-integration-guide-pdf.py
+
+# Design sources (README uses exported PNGs in docs/images/)
+*.af
