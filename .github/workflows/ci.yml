@@ -37,7 +37,7 @@ jobs:
             'scripts/setup-github-project.ps1',
             'scripts/sync-integration-guide.ps1'
           )
-          $issues = Invoke-ScriptAnalyzer -Path $paths -Severity Error
+          $issues = $paths | ForEach-Object { Invoke-ScriptAnalyzer -Path $_ -Severity Error }
           if ($issues) {
             $issues | Format-Table -AutoSize
             exit 1
