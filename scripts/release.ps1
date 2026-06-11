@@ -19,20 +19,10 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path $PSScriptRoot -Parent
 Set-Location $repoRoot
 
+Import-Module (Join-Path $PSScriptRoot 'ConnectWatch.Common.psm1') -Force
+
 if ($Version -notmatch '^v\d+\.\d+\.\d+$') {
     throw "Version must look like v1.0.4 (got: $Version)"
-}
-
-function Get-GhExecutable {
-    $gh = Get-Command gh -ErrorAction SilentlyContinue
-    if ($gh) {
-        return $gh.Source
-    }
-    $defaultGh = "C:\Program Files\GitHub CLI\gh.exe"
-    if (Test-Path $defaultGh) {
-        return $defaultGh
-    }
-    throw "GitHub CLI (gh) is not installed. Install from https://cli.github.com/ and run: gh auth login"
 }
 
 $gh = Get-GhExecutable

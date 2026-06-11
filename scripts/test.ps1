@@ -14,15 +14,9 @@ param(
 $ErrorActionPreference = "Stop"
 Set-Location (Split-Path $PSScriptRoot -Parent)
 
-$go = Get-Command go -ErrorAction SilentlyContinue
-if (-not $go) {
-    $defaultGo = "C:\Program Files\Go\bin\go.exe"
-    if (Test-Path $defaultGo) {
-        $go = Get-Item $defaultGo
-    } else {
-        throw "Go is not installed or not on PATH."
-    }
-}
+Import-Module (Join-Path $PSScriptRoot 'ConnectWatch.Common.psm1') -Force
+
+$go = Get-GoExecutable
 
 $args = @("test", "./...")
 if ($Race) {
@@ -33,7 +27,7 @@ if ($ShowVerbose) {
 }
 
 Write-Host "Running: go $($args -join ' ')" -ForegroundColor Cyan
-& $go.Source @args
+& $go @args
 if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }

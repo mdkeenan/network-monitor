@@ -30,6 +30,17 @@ alwaysApply: true
 - Ship via GitHub Releases + `update-manifest.json`.
 - Use `.\scripts\release.ps1 -Version vX.Y.Z -Notes "..."` after human approval of the version bump.
 
+## Git reconcile
+
+Preview local vs GitHub state, then apply when ready:
+
+```powershell
+.\scripts\reconcile-git.ps1 -Sync          # preview pull/push plan
+.\scripts\reconcile-git.ps1 -Sync -Apply   # execute
+```
+
+For commits: add `-Commit -Message "..." -All -Test` before `-Apply`. See skill `connectwatch-reconcile-git`. Do not use for version releases (use `release.ps1`).
+
 ## Cursor modes
 
 - **Plan mode** — multi-file features, layout migrations, API/schema changes.
@@ -51,8 +62,8 @@ Before accepting large agent diffs, ask: "Is this the root cause?" and "Are ther
 
 Guide source and builder live under `docs/notes/` and `scripts/integration_guide_*` (gitignored — not in the repo). When changing **workflow surface** files tracked in git, review and update `docs/notes/connectwatch-development-guide.md` if commands, CI, scripts, rules/skills, or GitHub steps changed:
 
-- `.cursor/rules/`, `.cursor/skills/`
-- `scripts/test.ps1`, `scripts/release.ps1`, `scripts/setup-github-project.ps1`
+- `.cursor/rules/`, `.cursor/skills/` (including `connectwatch-refactor-scripts`, `connectwatch-reconcile-git`)
+- `scripts/ConnectWatch.Common.psm1`, `scripts/reconcile-git.ps1`, `scripts/test.ps1`, `scripts/release.ps1`, `scripts/setup-github-project.ps1`
 - `build.ps1`, `update-and-run.ps1`, `update-and-run.bat`
 - `.github/workflows/ci.yml`, `tests/e2e/`, `update-manifest.json`
 

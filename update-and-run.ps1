@@ -24,37 +24,7 @@ if (Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction Sile
 }
 Set-Location $PSScriptRoot
 
-function Get-GoExecutable {
-    $go = Get-Command go -ErrorAction SilentlyContinue
-    if ($go) {
-        return $go.Source
-    }
-
-    $defaultGo = "C:\Program Files\Go\bin\go.exe"
-    if (Test-Path $defaultGo) {
-        return $defaultGo
-    }
-
-    throw "Go is not installed or not on PATH. Install from https://go.dev/dl/ and restart your terminal."
-}
-
-function Get-WebPortFromConfig {
-    param(
-        [string]$ConfigPath,
-        [int]$DefaultPort = 8080
-    )
-
-    if (-not (Test-Path $ConfigPath)) {
-        return $DefaultPort
-    }
-
-    $content = Get-Content -Path $ConfigPath -Raw
-    if ($content -match '(?m)^web_port:\s*(\d+)\s*$') {
-        return [int]$Matches[1]
-    }
-
-    return $DefaultPort
-}
+Import-Module (Join-Path $PSScriptRoot 'scripts\ConnectWatch.Common.psm1') -Force
 
 function Stop-ProcessTree {
     param(

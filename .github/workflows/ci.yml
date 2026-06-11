@@ -32,6 +32,8 @@ jobs:
           $paths = @(
             'build.ps1',
             'update-and-run.ps1',
+            'scripts/ConnectWatch.Common.psm1',
+            'scripts/reconcile-git.ps1',
             'scripts/test.ps1',
             'scripts/release.ps1',
             'scripts/setup-github-project.ps1'

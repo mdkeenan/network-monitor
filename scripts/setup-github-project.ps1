@@ -23,20 +23,10 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$gh = Get-Command gh -ErrorAction SilentlyContinue
-if (-not $gh) {
-    $ghPath = "C:\Program Files\GitHub CLI\gh.exe"
-    if (-not (Test-Path $ghPath)) { throw "GitHub CLI (gh) not found. Install: winget install GitHub.cli" }
-    $gh = $ghPath
-} else {
-    $gh = $gh.Source
-}
 
-function Invoke-Gh {
-    param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Args)
-    & $gh @Args
-    if ($LASTEXITCODE -ne 0) { throw "gh failed: gh $($Args -join ' ')" }
-}
+Import-Module (Join-Path $PSScriptRoot 'ConnectWatch.Common.psm1') -Force
+
+$gh = Get-GhExecutable
 
 Write-Host "Checking gh project scope..."
 $auth = & $gh auth status 2>&1 | Out-String
