@@ -12,5 +12,14 @@
 # Personal reference docs (operator manuals, cheat sheets — not app or .cursor/)
 /docs/notes/
 
+# Local development guide tooling (not shipped with the app)
+/scripts/build-connectwatch-development-guide.py
+/scripts/sync-integration-guide.ps1
+/scripts/integration_guide_*
+
+# Python bytecode (generated when running scripts/*.py)
+__pycache__/
+*.pyc
+
 # Design sources (README uses exported PNGs in docs/images/)
 *.af
