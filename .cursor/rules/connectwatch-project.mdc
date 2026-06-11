@@ -44,3 +44,23 @@ Before accepting large agent diffs, ask: "Is this the root cause?" and "Are ther
 
 - Workflow: `docs/notes/connectwatch-workflow.md`
 - Cursor concepts: `docs/notes/cursor-coding-notes.md`
+- GitHub Projects + settings: `docs/notes/github-settings.md` (board: project #3)
+- Operator manual: `docs/notes/cursor-integration-guide.md` (+ PDF)
+
+## Integration guide (local, gitignored)
+
+When changing **workflow surface** files, review and update `docs/notes/cursor-integration-guide.md` if commands, CI, scripts, rules/skills, or GitHub steps changed:
+
+- `.cursor/rules/`, `.cursor/skills/`
+- `scripts/`, `build.ps1`, `update-and-run.ps1`, `update-and-run.bat`
+- `.github/workflows/ci.yml`, `tests/e2e/`, `update-manifest.json`
+
+Do **not** update the guide for routine `internal/` app-only changes unless documented workflow/commands change.
+
+After editing the markdown:
+
+```powershell
+.\scripts\sync-integration-guide.ps1 -RegeneratePdf -MarkSynced
+```
+
+Check staleness anytime: `.\scripts\sync-integration-guide.ps1 -Check`

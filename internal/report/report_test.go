@@ -1,6 +1,7 @@
 package report
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -38,7 +39,7 @@ func TestTailFileMissingFile(t *testing.T) {
 }
 
 func TestSubmitWithoutRelayURL(t *testing.T) {
-	result, err := Submit(t.Context(), "", "v1.0.0", "instance", "test", "")
+	result, err := Submit(context.Background(), "", "v1.0.0", "instance", "test", "")
 	if err != nil {
 		t.Fatalf("Submit: %v", err)
 	}

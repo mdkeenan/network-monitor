@@ -1,6 +1,7 @@
 package report
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"sync/atomic"
@@ -19,7 +20,7 @@ func TestSubmitCrashUsesMinimalPayload(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	result, err := SubmitCrash(t.Context(), srv.URL, "v1.0.0", "instance-123", "test panic", "stack trace")
+	result, err := SubmitCrash(context.Background(), srv.URL, "v1.0.0", "instance-123", "test panic", "stack trace")
 	if err != nil {
 		t.Fatalf("SubmitCrash: %v", err)
 	}

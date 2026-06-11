@@ -1,18 +1,15 @@
+//go:build windows
+
 package server
 
 import (
 	"fmt"
 	"os/exec"
-	"runtime"
 	"strings"
 	"syscall"
 )
 
 func pickFolderPath() (string, error) {
-	if runtime.GOOS != "windows" {
-		return "", fmt.Errorf("folder picker is only available on Windows; enter the path manually")
-	}
-
 	script := strings.Join([]string{
 		"Add-Type -AssemblyName System.Windows.Forms",
 		"$dialog = New-Object System.Windows.Forms.FolderBrowserDialog",
