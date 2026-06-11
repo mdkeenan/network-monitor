@@ -306,7 +306,7 @@ try {
             & $syncScript -Check
             if ($LASTEXITCODE -ne 0) {
                 Write-Host ""
-                Write-Host "Tip: update docs/notes/cursor-integration-guide.md if workflow changed, then run .\scripts\sync-integration-guide.ps1 -RegeneratePdf -MarkSynced" -ForegroundColor Yellow
+                Write-Host "Tip: update docs/notes/connectwatch-development-guide.md if workflow changed, then run .\scripts\sync-integration-guide.ps1 -RegeneratePdf -MarkSynced" -ForegroundColor Yellow
             }
         }
     }

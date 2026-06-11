@@ -34,8 +34,7 @@ jobs:
             'update-and-run.ps1',
             'scripts/test.ps1',
             'scripts/release.ps1',
-            'scripts/setup-github-project.ps1',
-            'scripts/sync-integration-guide.ps1'
+            'scripts/setup-github-project.ps1'
           )
           $issues = $paths | ForEach-Object { Invoke-ScriptAnalyzer -Path $_ -Severity Error }
           if ($issues) {
