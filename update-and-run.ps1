@@ -7,13 +7,15 @@
 #   .\update-and-run.ps1 -SkipBuild      Restart only (no compile)
 #   .\update-and-run.ps1 -SkipBuild -Background -OpenBrowser
 #   .\update-and-run.ps1 -Background -Test
+#   .\update-and-run.ps1 -CheckGuide
 
 [CmdletBinding()]
 param(
     [switch]$SkipBuild,
     [switch]$Background,
     [switch]$OpenBrowser,
-    [switch]$Test
+    [switch]$Test,
+    [switch]$CheckGuide
 )
 
 $ErrorActionPreference = "Stop"
@@ -297,6 +299,17 @@ try {
     }
 
     Start-ConnectWatchApp -Port $webPort -RunInBackground:$Background -LaunchBrowser:$OpenBrowser
+
+    if ($CheckGuide) {
+        $syncScript = Join-Path $PSScriptRoot "scripts\sync-integration-guide.ps1"
+        if (Test-Path -LiteralPath $syncScript) {
+            & $syncScript -Check
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host ""
+                Write-Host "Tip: update docs/notes/cursor-integration-guide.md if workflow changed, then run .\scripts\sync-integration-guide.ps1 -RegeneratePdf -MarkSynced" -ForegroundColor Yellow
+            }
+        }
+    }
 }
 catch {
     Write-Host ""

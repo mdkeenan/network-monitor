@@ -29,7 +29,7 @@ jobs:
         run: |
           Set-PSRepository PSGallery -InstallationPolicy Trusted
           Install-Module PSScriptAnalyzer -Force
-          $issues = Invoke-ScriptAnalyzer -Path build.ps1, update-and-run.ps1, scripts/test.ps1, scripts/release.ps1 -Severity Error
+          $issues = Invoke-ScriptAnalyzer -Path build.ps1, update-and-run.ps1, scripts/test.ps1, scripts/release.ps1, scripts/setup-github-project.ps1, scripts/sync-integration-guide.ps1 -Severity Error
           if ($issues) {
             $issues | Format-Table -AutoSize
             exit 1
