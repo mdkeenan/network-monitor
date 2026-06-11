@@ -39,7 +39,9 @@ Preview local vs GitHub state, then apply when ready:
 .\scripts\reconcile-git.ps1 -Sync -Apply   # execute
 ```
 
-For commits: add `-Commit -Message "..." -All -Test` before `-Apply`. See skill `connectwatch-reconcile-git`. Do not use for version releases (use `release.ps1`).
+For commits: add `-Commit -Message "..." -All -Test` before `-Apply`. See skill `connectwatch-reconcile-git` and [docs/git-reconcile-cheatsheet.md](docs/git-reconcile-cheatsheet.md). Do not use for version releases (use `release.ps1`).
+
+After `-Apply`, if the commit touched workflow-surface files (rules, skills, scripts, CI, e2e): update `docs/notes/connectwatch-development-guide.md` if needed, then `.\scripts\sync-integration-guide.ps1 -RegeneratePdf -MarkSynced` (local only; skip for routine `internal/` changes).
 
 ## Cursor modes
 

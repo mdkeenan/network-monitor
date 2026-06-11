@@ -22,7 +22,17 @@ Use **connectwatch-release** (not this skill) for version ships: `.\scripts\rele
 3. Show the user the `=== ConnectWatch git reconcile (PREVIEW) ===` output and `[PLAN]` steps.
 4. Draft commit message from `git diff` / `git log -1` style (concise, why not what).
 5. After explicit approval, rerun with **`-Apply`** (same flags + message).
-6. If workflow-surface files changed (see `connectwatch-project.mdc`), remind about local `.\scripts\sync-integration-guide.ps1 -Check` if available.
+6. **After `-Apply`**, if the commit touched **workflow-surface** files (see `connectwatch-project.mdc` — `.cursor/`, `scripts/`, CI, e2e, build scripts, manifest):
+   - Remind the user to update `docs/notes/connectwatch-development-guide.md` if commands or workflow changed (local, gitignored).
+   - Then run locally:
+     ```powershell
+     .\scripts\sync-integration-guide.ps1 -RegeneratePdf -MarkSynced
+     ```
+   - Use `-Check` anytime to detect drift without regenerating:
+     ```powershell
+     .\scripts\sync-integration-guide.ps1 -Check
+     ```
+   - Do **not** run regen automatically unless the user asks — it is local-only and not part of git push.
 
 ## Common commands
 
@@ -53,6 +63,25 @@ Use **connectwatch-release** (not this skill) for version ships: `.\scripts\rele
 ```
 
 **On `main`:** push goes to `origin/main`. **Other branches:** push sets/uses upstream; `-CreatePr` runs `gh pr create --fill`.
+
+## After `-Apply` (workflow surface only)
+
+If the commit touched rules, skills, scripts, CI, e2e, or build/release files (see `connectwatch-project.mdc`):
+
+1. Update `docs/notes/connectwatch-development-guide.md` if commands or workflow changed (local, gitignored).
+2. Regenerate PDF and reset sync baseline:
+
+```powershell
+.\scripts\sync-integration-guide.ps1 -RegeneratePdf -MarkSynced
+```
+
+Check drift anytime (no regen):
+
+```powershell
+.\scripts\sync-integration-guide.ps1 -Check
+```
+
+Local-only — not part of git push. Skip for routine `internal/` app-only commits. Cheat sheet: [docs/git-reconcile-cheatsheet.md](../../docs/git-reconcile-cheatsheet.md).
 
 ## Parameters
 
@@ -94,6 +123,7 @@ Use **connectwatch-release** (not this skill) for version ships: `.\scripts\rele
 | `scripts/test.ps1` | Optional pre-commit gate (`-Test`) |
 | `scripts/release.ps1` | Version releases only |
 | `scripts/ConnectWatch.Common.psm1` | `Invoke-Git`, `Invoke-Gh` |
+| `scripts/sync-integration-guide.ps1` | Post-`-Apply` guide drift check / PDF regen (local, gitignored) |
 
 ## Do not
 
