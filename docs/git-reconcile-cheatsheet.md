@@ -55,6 +55,8 @@ Reconcile git — preview first, then -Apply when I approve.
 
 **Without `-Apply` = preview only. With `-Apply` = actually commits/pushes.**
 
+**End of session / between sessions:** see development guide § Session bookends (`docs/notes/connectwatch-development-guide.md` — local only).
+
 ## After `-Apply` (workflow surface only)
 
 If the commit touched rules, skills, scripts, CI, e2e, or build/release files (see `connectwatch-project.mdc`):
