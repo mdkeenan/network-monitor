@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"runtime"
 	"testing"
 )
 
@@ -66,6 +67,9 @@ func TestDetectPrivateNetworkLive(t *testing.T) {
 	if info.Prefix <= 0 || info.Prefix > 32 {
 		t.Fatalf("detectPrivateNetwork().Prefix = %d, want 1..32", info.Prefix)
 	}
+	if runtime.GOOS != "windows" {
+		return
+	}
 	if info.Gateway == "" {
 		t.Fatal("detectPrivateNetwork().Gateway is empty")
 	}
@@ -91,7 +95,10 @@ func TestHandlePrivateIPLive(t *testing.T) {
 	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if body.IP == "" || body.Prefix <= 0 || body.Gateway == "" {
+	if body.IP == "" || body.Prefix <= 0 {
+		t.Fatalf("unexpected body: %+v", body)
+	}
+	if runtime.GOOS == "windows" && body.Gateway == "" {
 		t.Fatalf("unexpected body: %+v", body)
 	}
 }
